@@ -76,13 +76,10 @@
 
 \section{Introduction}
 
-\textit{What is the project}
 
-\textit{Motivation}
+In recent years there has been a great effort and ongoing work on systems that associate images with natural language descriptions of them. A number of tasks associated with this problem have been proposed, including caption generation \cite{DBLP:journals/corr/XuBKCCSZB15} \cite{Chen_2015_CVPR} \cite{DBLP:journals/corr/KarpathyF14}, image search and description as a ranking task \cite{Hodosh:2013:FID:2566972.2566993}, cross-modal retrieval \cite{rasiwasia2010new} \cite{josecp2014role} and even image generation \cite{6751319}. Recently, researchers have asked the question: \textit{are state-of-the-art methods really capturing the meaning of these images?}
 
-In recent years there has been a great effort and ongoing work on systems that associate images with natural language descriptions of them. A number of tasks associated with this problem have been proposed, including caption generation \cite{CMUMicrosoft2015} \cite{MontrealToronto2015} \cite{Stanford2015}, image search and description as a ranking task \cite{HockenmeierTask}, cross-modal retrieval \cite{UCSDCrossModal} and even image generation \cite{CRFImage}. Recently, researchers have asked the question: \textit{are state-of-the-art methods really capturing the meaning of these images?}
-
-Despite all advances and improvement measures that have been achieved in different tasks, there is a general interest in capturing the real semantic meaning of images through their descriptions. Following this intuition, better and richer datasets are being proposed to progress in this direction. The Flickr30k dataset has been expanded with bidirectional annotations in images and sentence descriptions that correlate mentions of the same entities, both in written form and as a specific segment of a picture \cite{Flickr30Ent}. Microsoft released a couple of datasets for this problem also, the COCO Dataset, which also provides richer annotation to their images \cite{MsCOCO}, and the Abstract Image Dataset, a collection of clipart images with the intention of abstracting from the characteristics of real images and providing a simpler ground to focus on semantic meaning understanding. 
+Despite all advances and improvement measures that have been achieved in different tasks, there is a general interest in capturing the real semantic meaning of images through their descriptions. Following this intuition, better and richer datasets are being proposed to progress in this direction. The Flickr30k dataset has been expanded with bidirectional annotations in images and sentence descriptions that correlate mentions of the same entities, both in written form and as a specific segment of a picture \cite{DBLP:journals/corr/PlummerWCCHL15}. Microsoft released a couple of datasets for this problem also, the COCO Dataset, which also provides richer annotation to their images \cite{DBLP:journals/corr/LinMBHPRDZ14}, and the Abstract Image Dataset, a collection of clipart images with the intention of abstracting from the characteristics of real images and providing a simpler ground to focus on semantic meaning understanding \cite{Zitnick_2013_ICCV_Workshops}. 
 
 The idea of using abstract images is interesting and, assuming that their intuition is correct, it is even more interesting if we could take the extracted knowledge for this idealized setting and transfer it to real scenarios. For this project we propose to evaluate domain adaptation for this setting and explore the potential of using a simplified abstract domain to improve semantic meaning understanding in real images.
 
@@ -91,20 +88,19 @@ The idea of using abstract images is interesting and, assuming that their intuit
 \textit{Describe any previous work you found related to your project}
 
 \section{Problem formulation}
-\textit{Describe your project as a machine learning problem, identify inputs objects, labels, possible features}
 
-The problem of text based image description has been formulated as a ranking task \cite{}. Taking the set of images and their descriptions, we can evaluate for each description how well the proposed system ranks an image in contrast to all other images in the set. This framework allows for the analogous task to be evaluated as well, testing how well the system ranks the captions of a given image against the complete caption set. 
+The problem of text based image description has been formulated as a ranking task \cite{Hodosh:2013:FID:2566972.2566993}. Taking the set of images and their descriptions, we can evaluate for each description how well the proposed system ranks an image in contrast to all other images in the set. This framework allows for the analogous task to be evaluated as well, testing how well the system ranks the captions of a given image against the complete caption set. 
 
 For both tasks in this cross-modal evaluation the input objects are pairs of the form $(i, C)$ where $i$ corresponds to an image and $C$ corresponds to a set of sentences describing such image. Depending on the task, the pairing would be done from image to captions or from captions to images. 
 
-Metrics can be computed automatically, measuring the recall at different levels. For example, the rate of queries in which the correct response was among the top $k$ results and the median rank of the correct responses \cite{•}. 
+Metrics can be computed automatically, measuring the recall at different levels. For example, the rate of queries in which the correct response was among the top $k$ results and the median rank of the correct responses \cite{Hodosh:2013:FID:2566972.2566993}. 
 
-Different approaches for this task have tried different feature representations \cite{} \cite{}. We intend to evaluate them further to propose an appropriate feature representation for this project.
+Different approaches for this task have tried different feature representations. We intend to evaluate them further to propose an appropriate feature representation for this project.
 
 Microsoft Research released a dataset of abstract scenes and descriptions following the intuition that
 extracting high-level semantic meaning from real images tends to be difficult. Real images possess a great amount of detail and complex features that are not necessarily needed to capture its semantic meaning. 
 
-We propose to explore domain adaptation in this scenario, having two sets: the abstract dataset as the source set and a repository of real images \cite{} as the target set. The main goal is to learn the correlation of images and sentences in this simplified domain and map it to the more expressive domain of real images. 
+We propose to explore domain adaptation in this scenario, having two sets: the abstract dataset as the source set and a repository of real images as the target set. The main goal is to learn the correlation of images and sentences in this simplified domain and map it to the more expressive domain of real images. 
 
 
 \section{Data and Evaluation plan}
@@ -112,48 +108,18 @@ We propose to explore domain adaptation in this scenario, having two sets: the a
 As a domain adaptation problem, we need to define our source and target datasets. 
 
 \begin{itemize}
-\item \textbf{Source dataset:} The Abstract Scenes Dataset released by Microsoft Research (Clipart). The first version of this dataset contains 10,000 abstract images of kids playing in a park. The images are composed by a set of 80 pieces of clipart representing 58 different objects. These images are arranged in groups of 10, displaying different pictorial versions of the same scene text description. A newer version of the dataset has been released expanding to 6 the number of sentences associated with each image, amounting for a total of 60,000 sentences \cite{}. 
-\item \textbf{Target dataset (op1):} The Flickr30k Entities dataset is an extension of the Flick30k released by University of Illinois at Urbana Champaign. This dataset contains 30,000 images and 158,000 captions. The dataset has been expanded with an additional 244,000 coreference chains linking mentioned entities in the captions the segment of the images that frame those entities \cite{}. 
-\item \textbf{Target dataset (op2)}: COCO is a dataset released by Microsoft Research containing more than 300,000 images and 5 captions per image. This dataset also includes object segmentation in images from a total of 80 objects categories \cite{}. 
+\item \textbf{Source dataset:} The Abstract Scenes Dataset released by Microsoft Research (Clipart). The first version of this dataset contains 10,000 abstract images of kids playing in a park. The images are composed by a set of 80 pieces of clipart representing 58 different objects. These images are arranged in groups of 10, displaying different pictorial versions of the same scene text description. A newer version of the dataset has been released expanding to 6 the number of sentences associated with each image, amounting for a total of 60,000 sentences \cite{Zitnick_2013_ICCV_Workshops}. 
+\item \textbf{Target dataset (op1):} The Flickr30k Entities dataset is an extension of the Flick30k released by University of Illinois at Urbana Champaign. This dataset contains 30,000 images and 158,000 captions. The dataset has been expanded with an additional 244,000 coreference chains linking mentioned entities in the captions the segment of the images that frame those entities \cite{DBLP:journals/corr/PlummerWCCHL15}. 
+\item \textbf{Target dataset (op2)}: COCO is a dataset released by Microsoft Research containing more than 300,000 images and 5 captions per image. This dataset also includes object segmentation in images from a total of 80 objects categories \cite{DBLP:journals/corr/LinMBHPRDZ14}. 
 \end{itemize}
 
 
 To evaluate our proposal we intend to take as a baseline the training and retrieval done by only using repositories of real images. Since we intend to measure the advantages of including simpler images in the source domain, the evaluation would focus on the improvements achieved by using the abstract images dataset as a source domain and exploring domain adaptation on the task of image retrieval on real images. All tests are to be done using the same algorithm. 
 
 
-\textit{Describe the data you intend to use. Mention if there is an existing data source you intend to use, or if annotation is required}
 
-\textit{How will you evaluate your algorithm? What is a reasonable baseline?}
-
-
-
-\section*{Submission Instructions:} 
-\textit{delete this section when submitting}
-
-You are required to use \LaTeX \, to type your solutions to questions, and report of your programing as well. Other formats of submission will \textbf{not} be accepted. A template named ``homework.tex" is also provided for your convenience.\\
-
-After logging into data.cs.purdue.edu (physically go to the lab or use ssh remotely, you are all granted the accounts to CS data machines during this class), please follow these steps to submit your assignment:
-\begin{enumerate}
-	\item Make a directory named \textit{`your Name\_your Surname'} and copy all of your files there.
-	\item While in the upper level directory (if the files are in /homes/dan/dan\_goldwasser, go to/homes/dan), execute the following command:\\
-
-	\texttt{turnin -c cs578 -p PROPOSAL *your\_folder\_name*}
-		
-	(e.g. your prof would use: \texttt{turnin -c cs578 -p PROPOSAL dan\_goldwasser} to submit his work)\\
-		
-	Keep in mind that old submissions are overwritten with new ones whenever you execute this
-command.\\
-
-	\item You can verify the contents of your submission by executing the following command:\\
-	
-	\texttt{turnin -v -c cs578 -p PROPOSAL\\}
-
-	Do \textbf{not} forget the -v flag here, as otherwise your submission would be replaced with an empty
-one.
-\end{enumerate}
-
-%\nocite{*}
-%\bibliographystyle{plainnat}
-%\bibliography{all}
+\nocite{*}
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \end{document}
