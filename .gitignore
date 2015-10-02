@@ -1,0 +1,5 @@
+#Latex Helper files
+*.aux
+*.bbl
+*.log
+*.out
