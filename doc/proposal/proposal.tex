@@ -75,11 +75,17 @@
 %\thispagestyle{empty}
 
 \section{Introduction}
+
 \textit{What is the project}
 
-
-
 \textit{Motivation}
+
+In recent years there has been a great effort and ongoing work on systems that associate images with natural language descriptions of them. A number of tasks associated with this problem have been proposed, including caption generation \cite{CMUMicrosoft2015} \cite{MontrealToronto2015} \cite{Stanford2015}, image search and description as a ranking task \cite{HockenmeierTask}, cross-modal retrieval \cite{UCSDCrossModal} and even image generation \cite{CRFImage}. Recently, researchers have asked the question: \textit{are state-of-the-art methods really capturing the meaning of these images?}
+
+Despite all advances and improvement measures that have been achieved in different tasks, there is a general interest in capturing the real semantic meaning of images through their descriptions. Following this intuition, better and richer datasets are being proposed to progress in this direction. The Flickr30k dataset has been expanded with bidirectional annotations in images and sentence descriptions that correlate mentions of the same entities, both in written form and as a specific segment of a picture \cite{Flickr30Ent}. Microsoft released a couple of datasets for this problem also, the COCO Dataset, which also provides richer annotation to their images \cite{MsCOCO}, and the Abstract Image Dataset, a collection of clipart images with the intention of abstracting from the characteristics of real images and providing a simpler ground to focus on semantic meaning understanding. 
+
+The idea of using abstract images is interesting and, assuming that their intuition is correct, it is even more interesting if we could take the extracted knowledge for this idealized setting and transfer it to real scenarios. For this project we propose to evaluate domain adaptation for this setting and explore the potential of using a simplified abstract domain to improve semantic meaning understanding in real images.
+
 
 \section{Related work}
 \textit{Describe any previous work you found related to your project}
