@@ -82,10 +82,20 @@
 \textit{Motivation}
 
 \section{Related work}
-\textit{Describe any previous work you found related to your project}
+The problem of image retrieval and description has been addressed through many different approaches.
+We are particularly interested in the work that treats this problem as a ranking task. In \cite{•}  a dataset called Flickr8k with flickr images and captions generated through crowd sourcing is used. This works argues that regular descriptions of flickr images are not accurate for this task, since the information that they provide  focuses on the details and not on the main scene. A kernel Canonical Correlation Analysis technique is used to estimate a function $f(i,c)$, where $i$ is an image and $c$ is a caption. The more correlated $i$ and $c$ are, the bigger the output returned by $f(i,c)$  \cite{el paper completo}. This function can be used for raking captions as well as images. In this research it is mentioned that they do not need to define a discrete set of scenes and objects in the images and later detect them using pre-trained algorithms, unlike most of the referenced related work \cite{[ Kulkarni et al., 2011; Yang et al., 2011; Mitchell et al., 2012]}. 
+
+When estimating $f(i,c)$ this work focused more on the complexity of the text representation than the complexity in the image model. For the images, a spatial pyramid kernel\cite [Lazebnik et al., 2009]  was implemented. The features used for this kernel were: color, texture and SIFT features \cite{Lowe, 2004;}. In contrast, the image modeling was based of a subsequence string kernel of max length 3 per subsequence\cite{paper nuevo}. This kernel was extended to include lexical similarities, to detect when two words or phrases are refering to the same entity or action. 
+
+This work also proposes an automatic method for evaluating the ranking task by checking if the correct image/caption was listed first, in the top 5 or in the top 10. This method of evaluation proved to be more efective than the scoring methods that are widely used to evaluate generation-based systems [Papineni et al., 2002]  [Lin, 2004].
+ 
+Improvements have been made to this work \citep{ }, including the development of a richer database called Flickr30k entities. This project adds a new correlation between the captions and the image's entities by identifying sets of elements in the text that refer to the same entity. This work shows that using correlation features, the accuracy of raking images and sentences  increases. 
+
+Microsoft coco
+
+
 
 \section{Problem formulation}
-\textit{Describe your project as a machine learning problem, identify inputs objects, labels, possible features}
 
 The problem of text based image description has been formulated as a ranking task \cite{}. Taking the set of images and their descriptions, we can evaluate for each description how well the proposed system ranks an image in contrast to all other images in the set. This framework allows for the analogous task to be evaluated as well, testing how well the system ranks the captions of a given image against the complete caption set. 
 
