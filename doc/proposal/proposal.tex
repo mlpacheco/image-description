@@ -81,7 +81,7 @@ In recent years there has been a great effort and ongoing work on systems that a
 
 Despite all advances and improvement measures that have been achieved in different tasks, there is a general interest in capturing the real semantic meaning of images through their descriptions. Following this intuition, better and richer datasets are being proposed to progress in this direction. The Flickr30k dataset has been expanded with bidirectional annotations in images and sentence descriptions that correlate mentions of the same entities, both in written form and as a specific segment of a picture \cite{DBLP:journals/corr/PlummerWCCHL15}. Microsoft released a couple of datasets for this problem also, the COCO Dataset, which also provides richer annotation to their images \cite{DBLP:journals/corr/LinMBHPRDZ14}, and the Abstract Image Dataset, a collection of clipart images with the intention of abstracting from the characteristics of real images and providing a simpler ground to focus on semantic meaning understanding \cite{Zitnick_2013_ICCV_Workshops}. 
 
-The idea of using abstract images is interesting and, assuming that their intuition is correct, it is even more interesting if we could take the extracted knowledge for this idealized setting and transfer it to real scenarios. For this project we propose to evaluate domain adaptation for this setting and explore the potential of using a simplified abstract domain to improve semantic meaning understanding in real images.
+The idea of using abstract images is interesting and, assuming that their intuition is correct, it is even more interesting if we could take the extracted knowledge for this idealized setting and transfer it to real scenarios. For this project we propose to evaluate domain adaptation for this setting and explore the potential of using a simplified abstract domain to improve semantic meaning understanding in real images \cite{DBLP:journals/corr/XuBKCCSZB15} .
 
 
 \section{Related work}
@@ -94,8 +94,9 @@ This work also proposes an automatic method for evaluating the ranking task by c
  
 Improvements have been made to this work \citep{ }, including the development of a richer database called Flickr30k entities. This project adds a new correlation between the captions and the image's entities by identifying sets of elements in the text that refer to the same entity. This work shows that using correlation features, the accuracy of raking images and sentences  increases. 
 
-Microsoft coco
+Other approaches to this problem include using Conditional Random Fields to model the conditional probability of a scene given a set of sentences \cite{6751319}. The authors model occurrence of objects in images and consider the absolute position, relative position to other objects and specific attributes of a limited amount of objects. As for the language model, the authors propose extracting 2-tuples and 3-tuples of the form $(o_i, r, o_j)$ containing a primary object, a relation and an (optional) secondary object. Tuples are constructed using semantic roles analysis. This approach has only been tested on abstract images and in addition of ranking, is able to generate new images with equivalent semantic meaning to the queried image. 
 
+Most recent work on caption generation also tackles ranking. Most of them use Convolutional Neural Networks to extract feature vectors to obtain vector representation of images and Recurrent Neural Networks to decode representations into natural language. This idea is inspired by advances in Machine Translation on the premise that the image captioning task is analogous to "translating" an image into a sentence \cite{DBLP:journals/corr/XuBKCCSZB15} . 
 
 
 \section{Problem formulation}
