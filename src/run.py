@@ -70,6 +70,10 @@ def main():
     sentence_feat = nn.train_sentence_features(train_ss)
     nn.save_sentence_instances(sentence_feat, opts.output)
 
+    test_index = test_ss.keys()[0]
+    print nn.max_sentence_similarity(test_ss[test_index], train_ss,
+                                     sentence_feat, len(train_ss))
+
 
 if __name__ == "__main__":
     main()
