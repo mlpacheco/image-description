@@ -46,24 +46,70 @@ int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     return 1;
 }
 
+int extractSift(string trainedFile, string imagePath, Mat &bowDescriptor) {
+
+    Mat dictionary;
+    FileStorage fs(trainedFile, FileStorage::READ);
+    fs["vocabulary"] >> dictionary;
+    fs.release();
+
+    Ptr<DescriptorMatcher> matcher(new FlannBasedMatcher);
+    Ptr<FeatureDetector> detector(new SiftFeatureDetector());
+    Ptr<DescriptorExtractor>  extractor(new SiftDescriptorExtractor);
+    BOWImgDescriptorExtractor bowDE(extractor, matcher);
+    bowDE.setVocabulary(dictionary);
+
+    Mat img = imread(imagePath, CV_LOAD_IMAGE_GRAYSCALE);
+    vector<KeyPoint> keypoints;
+    detector->detect(img, keypoints);
+
+    bowDE.compute(img, keypoints, bowDescriptor);
+
+    return 1;
+
+}
+
+int extractImageFeatures(vector<string> imagePaths, string trainedFile, vector<Mat> &imagesFeats) {
+    for (int i = 0; i < imagePaths.size(); i++) {
+        Mat bowDescriptor;
+        extractSift(trainedFile, imagePaths[i], bowDescriptor);
+        imagesFeats.push_back(bowDescriptor);
+    }
+
+    return 1;
+}
+
 
 
 int main(int argc, char *argv[]) {
 
     string path = "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/data/AbstractScenes/RenderedScenes/";
     string filename;
-    vector<string> imagePaths;
+    vector<string> trainImagePaths;
 
     for(int i = 0; i < 10; i++) {
         stringstream ss;
         ss << i;
         filename = path + "Scene0_" + ss.str() + ".png";
-        imagePaths.push_back(filename);
+        trainImagePaths.push_back(filename);
     }
 
-    cout << "imagePaths " << imagePaths.size() << endl;
+    cout << "imagePaths " << trainImagePaths.size() << endl;
 
-    trainSift(imagePaths, 2, "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml");
+    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
+    trainSift(trainImagePaths, 2, trainedFile);
+
+    vector<Mat> extractedFeats;
+
+    vector<string> testImagePaths;
+    for(int i = 0; i < 10; i++) {
+        stringstream ss;
+        ss << i;
+        filename = path + "Scene1_" + ss.str() + ".png";
+        testImagePaths.push_back(filename);
+    }
+
+    extractImageFeatures(testImagePaths, trainedFile, extractedFeats);
 
 
 }
