@@ -1,20 +1,48 @@
 .PHONY: all clean
 
 CPP = g++
+SWIG = swig
 
-OBJECTS = images.o
+SW_FLAGS = -c++ -python
+CPP_FLAGS = -c -fPIC
+
+OBJECTS = images.o images_wrap.o
 
 LDFLAGS = -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann \
           -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_nonfree \
           -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_ts \
           -lopencv_video -lopencv_videostab
 
-INCLUDES = -I'/opt/local/include/opencv' -I'/opt/local/include'
-LIB_INCLUDES = -L'/opt/local/lib'
+SW_LDFLAGS = -lpython -dynamiclib
+
+INCLUDES = -I'/opt/local/include/opencv' \
+					 -I'/opt/local/include' \
+					 -I'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7'
+
+LIB_INCLUDES = -L'/opt/local/lib'\
+               -L'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config'
+
+LIB_APPLE = '/System/Library/Frameworks/Python.framework/Versions/2.7/Python'
+LIB_PORTS = '/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib'
+
+all: _images.so
+
+images_wrap.cxx: images.i
+		$(SWIG) $(SW_FLAGS) $<
+
+images_wrap.o: images_wrap.cxx
+		$(CPP) $(CPP_FLAGS) $(INCLUDES) $(LIB_INCLUDES) $<
 
 images.o: images.cpp
-		$(CPP) $(INCLUDES) $(LIB_INCLUDES) $(LDFLAGS) $< -o $@
+		$(CPP) $(INCLUDES) $(LIB_INCLUDES) $(LDFLAGS) $(SW_LDFLAGS) $< -o $@
+
+_images.so: $(OBJECTS)
+		$(CPP) $(SW_LDFLAGS) $^ -o $@
+
 
 clean:
-		rm -f *.o
+		rm -f *.o *.cxx *.pyc *.so images.py
 
+# necessary hack for python import on OSX when using Macports-python instead of Apple-python
+mac_hack:
+		install_name_tool -change $(LIB_APPLE) $(LIB_PORTS) _images.so

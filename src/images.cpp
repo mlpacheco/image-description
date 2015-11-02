@@ -1,17 +1,4 @@
-#include <stdlib.h>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iostream>
-
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
-
-using namespace std;
-using namespace cv;
+#include "images.hpp"
 
 int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     Mat input;
@@ -80,7 +67,7 @@ double similarityScore(string image1Path, string image2Path, string trainedFile)
 }
 
 
-int main(int argc, char *argv[]) {
+/*int main(int argc, char *argv[]) {
 
     string path = "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/data/AbstractScenes/RenderedScenes/";
     string filename;
@@ -105,4 +92,4 @@ int main(int argc, char *argv[]) {
                 << endl;
     }
 
-}
+}*/
