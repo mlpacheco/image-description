@@ -7,6 +7,10 @@
 *.synctex.gz
 *.blg
 
+##W Swig ###
+images.py
+*.cxx
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -66,6 +66,13 @@ def main():
                       dest='val_ratio', type='int', default=0.0)
     (opts, args) = parser.parse_args()
 
+    mandatories = ['source', 'target', 'out_image', 'out_sentence']
+    for m in mandatories:
+        if not opts.__dict__[m]:
+            print "mandatory option is missing\n"
+            parser.print_help()
+            exit(-1)
+
     train_ss, val_ss, test_ss = parse_microsoft_sentences(opts.source,
                                                           opts.train_ratio,
                                                           opts.val_ratio)
