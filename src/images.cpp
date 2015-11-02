@@ -69,16 +69,15 @@ int extractSift(string trainedFile, string imagePath, Mat &bowDescriptor) {
 
 }
 
-int extractImageFeatures(vector<string> imagePaths, string trainedFile, vector<Mat> &imagesFeats) {
-    for (int i = 0; i < imagePaths.size(); i++) {
-        Mat bowDescriptor;
-        extractSift(trainedFile, imagePaths[i], bowDescriptor);
-        imagesFeats.push_back(bowDescriptor);
-    }
 
-    return 1;
+// right now it only measures SIFT but it needs other features next
+double similarityScore(string image1Path, string image2Path, string trainedFile) {
+    Mat histogram1;
+    Mat histogram2;
+    extractSift(trainedFile, image1Path, histogram1);
+    extractSift(trainedFile, image2Path, histogram2);
+    return compareHist(histogram1, histogram2, CV_COMP_INTERSECT);
 }
-
 
 
 int main(int argc, char *argv[]) {
@@ -99,17 +98,11 @@ int main(int argc, char *argv[]) {
     string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
     trainSift(trainImagePaths, 2, trainedFile);
 
-    vector<Mat> extractedFeats;
-
-    vector<string> testImagePaths;
-    for(int i = 0; i < 10; i++) {
-        stringstream ss;
-        ss << i;
-        filename = path + "Scene1_" + ss.str() + ".png";
-        testImagePaths.push_back(filename);
+    string testImage = path + "Scene0_0.png";
+    for(int i = 0; i < trainImagePaths.size(); i++) {
+        cout << "Similarity score: " << \
+                similarityScore(testImage, trainImagePaths[i], trainedFile) \
+                << endl;
     }
-
-    extractImageFeatures(testImagePaths, trainedFile, extractedFeats);
-
 
 }
