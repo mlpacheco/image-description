@@ -19,9 +19,10 @@ def train_sentence_features(sentences, filename):
 
     return filename
 
-def train_image_features(images, num_words, filename):
-    imagePaths = gravity.PathSet(images)
-    gravity.trainSift(imagePaths, num_words, filename)
+def train_image_features(image_list, num_words, filename):
+    print type(image_list.values())
+    imagePaths = images.PathSet(image_list.values())
+    images.trainSift(imagePaths, num_words, filename)
     return filename
 
 def max_sentence_similarity(s_query, sentences, filename, train_size):
@@ -36,9 +37,9 @@ def max_sentence_similarity(s_query, sentences, filename, train_size):
             nn_img = i
     return nn_img, max_sim
 
-def max_image_similarity(i_query, images, filename):
+def max_image_similarity(i_query, image_list, filename):
     max_sim = 0.0
-    for i,s in images.iteritems():
+    for i,s in image_list.iteritems():
         curr_sim = images.similarityScore(i_query, i, filename)
         if curr_sim > max_sim:
             max_sim = curr_sim

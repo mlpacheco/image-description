@@ -1,6 +1,7 @@
 import optparse
 import os
 from random import shuffle
+import re
 
 import nn
 
@@ -16,8 +17,7 @@ def get_split_ids_microsoft(train_ratio, val_ratio):
     return set(ids[:num_train]),\
            set(ids[num_train:num_train+num_val])
 
-def parse_microsoft_sentences(domain, train_ratio, val_ratio):
-    train_ids, val_ids = get_split_ids_microsoft(train_ratio, val_ratio)
+def parse_microsoft_sentences(domain, train_ids, val_ids):
     filename1 = os.path.join(domain, "SimpleSentences", "SimpleSentences1_10020.txt")
     filename2 = os.path.join(domain, "SimpleSentences", "SimpleSentences2_10020.txt")
     train_data = {}; val_data = {}; test_data = {}
@@ -40,11 +40,34 @@ def parse_microsoft_sentences(domain, train_ratio, val_ratio):
                     sentences[index] = s[2]
     return train_data, val_data, test_data
 
+def parse_microsoft_images(domain, train_ids, val_ids):
+    path = os.path.join(domain, "RenderedScenes")
+    train_img = {}; val_img = {}; test_img = {}
+    for f in os.listdir(path):
+        filepath = os.path.join(path, f)
+        if os.path.isfile(filepath):
+            nums = re.split(r'_|Scene|\.png', f)
+            nums = filter(None, nums)
+            nums = map(int, nums)
+            index = nums[0]*10 + nums[1]
+            if index in train_ids:
+                train_img[index] = filepath
+            elif index in val_ids:
+                val_img[index] = filepath
+            else:
+                test_img[index] = filepath
+    return train_img, val_img, test_img
+
+def parse_microsoft_dataset(domain, train_ratio, val_ratio):
+    train_ids, val_ids = get_split_ids_microsoft(train_ratio, val_ratio)
+    train_sen, val_sen, test_sen = parse_microsoft_sentences(domain, train_ids, val_ids)
+    train_img, val_img, test_img = parse_microsoft_images(domain, train_ids, val_ids)
+    return train_sen, train_img, val_sen, val_img, test_img, test_sen
+
+
 def parse_flickr30k_sentences(domain):
     pass
 
-def parse_microsoft_images(domain):
-    pass
 
 def parse_flickr30k_images(domain):
     pass
@@ -58,7 +81,7 @@ def main():
                       dest='target', type='string')
     parser.add_option('--so', help='output file for sentence instances',
                       dest='out_sentence', type='string')
-    parser.add_option('--io', help='output path for image instances',
+    parser.add_option('--io', help='output file for image instances',
                       dest='out_image', type='string')
     parser.add_option('--rt', help='ratio of examples for training',
                       dest='train_ratio', type='int', default=0.7)
@@ -73,17 +96,16 @@ def main():
             parser.print_help()
             exit(-1)
 
-    train_ss, val_ss, test_ss = parse_microsoft_sentences(opts.source,
-                                                          opts.train_ratio,
-                                                          opts.val_ratio)
-    nn.train_sentence_features(train_ss, opts.out_sentence)
-    #nn.train_image_features(train_i, opts.out_image)
+    train_sen, train_img, val_sen, val_img, test_sen, test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
 
-    test_index = test_ss.keys()[0]
-    print nn.max_sentence_similarity(test_ss[test_index], train_ss,
-                                     opts.out_sentence, len(train_ss))
-    #print nn.max_image_similarity(test_i[test_index], train_i,
-    #                              opts.out_image)
+    nn.train_sentence_features(train_sen, opts.out_sentence)
+    nn.train_image_features(train_img, 256, opts.out_image)
+
+    test_index = test_sen.keys()[0]
+    print nn.max_sentence_similarity(test_sen[test_index], train_sen,
+                                     opts.out_sentence, len(train_sen))
+    print nn.max_image_similarity(test_img[test_index], train_img,
+                                  opts.out_image)
 
 
 if __name__ == "__main__":

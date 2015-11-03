@@ -8,7 +8,6 @@ int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     SiftDescriptorExtractor detector;
 
     for (int i = 0; i < imagePaths.size(); i++) {
-        cout << imagePaths[i] << endl;
         input = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         detector.detect(input, keypoints);
         detector.compute(input, keypoints, descriptor);
@@ -23,7 +22,6 @@ int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     int flags = KMEANS_PP_CENTERS;
     // Train K-Means on numWords
     BOWKMeansTrainer bowTrainer(numWords, tc, retries, flags);
-    cout << featuresUnclustered.dims << endl;
     Mat dictionary = bowTrainer.cluster(featuresUnclustered);
     // Write results;
     FileStorage fs(outfile, FileStorage::WRITE);
