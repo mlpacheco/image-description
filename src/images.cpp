@@ -65,29 +65,40 @@ double similarityScore(string image1Path, string image2Path, string trainedFile)
 }
 
 
-/*int main(int argc, char *argv[]) {
+//int main(int argc, char *argv[]) {
 
-    string path = "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/data/AbstractScenes/RenderedScenes/";
-    string filename;
-    vector<string> trainImagePaths;
+    //string path = "/Users/Glebys/Purdue/machine_learning/FinalProject/ShortAbstractScenes/";
+    //string filename;
+    //vector<string> trainImagePaths;
 
-    for(int i = 0; i < 10; i++) {
-        stringstream ss;
-        ss << i;
-        filename = path + "Scene0_" + ss.str() + ".png";
-        trainImagePaths.push_back(filename);
-    }
+    //for(int i = 0; i < 30; i++) {
+        //for(int j=0; j<10; j++) {
+            ////char buffer [100];
+            ////int n, a=10000, b=333;
+            ////n=sprintf(buffer, "Scene%d_%d.png", a, b);
+            ////cout << buffer;
+            ////memset (buffer,0,100);
+            ////a=5;
+            ////b=3;
+            ////n=sprintf(buffer, "Scene%d_%d.png", a, b);
+            ////cout << buffer;
+            //stringstream ss;
+            //ss << i;
+            //filename = path + "Scene_" + ss.str() + ".png";
+            //trainImagePaths.push_back(filename);
+        //}
+    //}
 
-    cout << "imagePaths " << trainImagePaths.size() << endl;
+    //cout << "imagePaths " << trainImagePaths.size() << endl;
 
-    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
-    trainSift(trainImagePaths, 2, trainedFile);
+    //string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
+    //trainSift(trainImagePaths, 2, trainedFile);
 
-    string testImage = path + "Scene0_0.png";
-    for(int i = 0; i < trainImagePaths.size(); i++) {
-        cout << "Similarity score: " << \
-                similarityScore(testImage, trainImagePaths[i], trainedFile) \
-                << endl;
-    }
+    //string testImage = path + "Scene0_0.png";
+    //for(int i = 0; i < trainImagePaths.size(); i++) {
+        //cout << "Similarity score: " << \
+                //similarityScore(testImage, trainImagePaths[i], trainedFile) \
+                //<< endl;
+    //}
 
-}*/
+//}

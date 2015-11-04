@@ -7,6 +7,10 @@
 *.synctex.gz
 *.blg
 
+### Trained Files ###
+src/*.json
+src/*.yml
+
 ##W Swig ###
 images.py
 *.cxx

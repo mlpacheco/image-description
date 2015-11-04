@@ -20,7 +20,6 @@ def train_sentence_features(sentences, filename):
     return filename
 
 def train_image_features(image_list, num_words, filename):
-    print type(image_list.values())
     imagePaths = images.PathSet(image_list.values())
     images.trainSift(imagePaths, num_words, filename)
     return filename
@@ -34,17 +33,18 @@ def max_sentence_similarity(s_query, sentences, filename, train_size):
         curr_sim = f1_similarity(s_query, s, dictionary, train_size)
         if curr_sim > max_sim:
             max_sim = curr_sim
-            nn_img = i
-    return nn_img, max_sim
+            pair_index = i
+    return pair_index, max_sim
 
 def max_image_similarity(i_query, image_list, filename):
     max_sim = 0.0
-    for i,s in image_list.iteritems():
-        curr_sim = images.similarityScore(i_query, i, filename)
+    #image index and path
+    for i,p in image_list.iteritems():
+        curr_sim = images.similarityScore(i_query, p, filename)
         if curr_sim > max_sim:
             max_sim = curr_sim
-            nn_sent = s
-    return nn_sent, max_sim
+            pair_index = i
+    return pair_index, max_sim
 
 def score_image():
     return

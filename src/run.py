@@ -4,15 +4,29 @@ from random import shuffle
 import re
 
 import nn
+def get_last_sentence(f_name):
+    with open(f_name, 'rb') as fh:
+        offs = -100
+        while True:
+            fh.seek(offs, 2)
+            lines = fh.readlines()
+            if len(lines)>1:
+                last = lines[-1]
+                break
+            offs *= 2
+        return last
 
 def get_splits(total, train_ratio, val_ratio):
     num_train = int(total*train_ratio)
     num_val = int(total*val_ratio)
     return num_train, num_val
 
-def get_split_ids_microsoft(train_ratio, val_ratio):
-    num_train, num_val = get_splits(10200, train_ratio, val_ratio)
-    ids = [i for i in xrange(0, 10200)]
+def get_split_ids_microsoft(domain, train_ratio, val_ratio):
+    filename = os.path.join(domain, "SimpleSentences", "SimpleSentences1_10020.txt")
+    last_sentence  = get_last_sentence(filename)
+    total_image_num = int(last_sentence.split()[0]) + 1
+    num_train, num_val = get_splits(total_image_num, train_ratio, val_ratio)
+    ids = [i for i in xrange(0, total_image_num)]
     shuffle(ids)
     return set(ids[:num_train]),\
            set(ids[num_train:num_train+num_val])
@@ -44,25 +58,27 @@ def parse_microsoft_images(domain, train_ids, val_ids):
     path = os.path.join(domain, "RenderedScenes")
     train_img = {}; val_img = {}; test_img = {}
     for f in os.listdir(path):
-        filepath = os.path.join(path, f)
-        if os.path.isfile(filepath):
-            nums = re.split(r'_|Scene|\.png', f)
-            nums = filter(None, nums)
-            nums = map(int, nums)
-            index = nums[0]*10 + nums[1]
-            if index in train_ids:
-                train_img[index] = filepath
-            elif index in val_ids:
-                val_img[index] = filepath
-            else:
-                test_img[index] = filepath
+        # Ignore hidden files
+        if not f.startswith('.'):
+            filepath = os.path.join(path, f)
+            if os.path.isfile(filepath):
+                nums = re.split(r'_|Scene|\.png', f)
+                nums = filter(None, nums)
+                nums = map(int, nums)
+                index = nums[0]*10 + nums[1]
+                if index in train_ids:
+                    train_img[index] = filepath
+                elif index in val_ids:
+                    val_img[index] = filepath
+                else:
+                    test_img[index] = filepath
     return train_img, val_img, test_img
 
 def parse_microsoft_dataset(domain, train_ratio, val_ratio):
-    train_ids, val_ids = get_split_ids_microsoft(train_ratio, val_ratio)
+    train_ids, val_ids = get_split_ids_microsoft(domain, train_ratio, val_ratio)
     train_sen, val_sen, test_sen = parse_microsoft_sentences(domain, train_ids, val_ids)
     train_img, val_img, test_img = parse_microsoft_images(domain, train_ids, val_ids)
-    return train_sen, train_img, val_sen, val_img, test_img, test_sen
+    return train_sen, train_img, val_sen, val_img, test_sen, test_img
 
 
 def parse_flickr30k_sentences(domain):
@@ -104,6 +120,7 @@ def main():
     test_index = test_sen.keys()[0]
     print nn.max_sentence_similarity(test_sen[test_index], train_sen,
                                      opts.out_sentence, len(train_sen))
+
     print nn.max_image_similarity(test_img[test_index], train_img,
                                   opts.out_image)
 
