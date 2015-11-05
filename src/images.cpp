@@ -1,5 +1,55 @@
 #include "images.hpp"
 
+/* Auxiliary Functions  */
+
+int Mat2vector(Mat mat, vector<vector <float> > &vect) {
+    for (int i = 0; i < mat.rows; i++) {
+        vector<float> row;
+        for (int j = 0; j < mat.cols; j++) {
+            row[j] = mat.at<float>(i,j);
+        }
+        vect[i] = row;
+    }
+}
+
+
+string type2str(int type) {
+  string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
+
+int printContents(Mat BOWmat) {
+    for (int i = 0; i < BOWmat.rows; i++) {
+        for (int j = 0; j < BOWmat.cols; j++) {
+            cout << BOWmat.at<float>(i,j) << " ";
+        }
+        cout << endl;
+    }
+
+    return 1;
+}
+
+/* SIFT Functions */
+
+
 int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     Mat input;
     vector<KeyPoint> keypoints;
@@ -31,7 +81,7 @@ int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     return 1;
 }
 
-int extractSift(string trainedFile, string imagePath, Mat &bowDescriptor) {
+int extractSiftBOW(string trainedFile, vector<string> imagePaths, Mat &histograms) {
 
     Mat dictionary;
     FileStorage fs(trainedFile, FileStorage::READ);
@@ -43,62 +93,88 @@ int extractSift(string trainedFile, string imagePath, Mat &bowDescriptor) {
     Ptr<DescriptorExtractor>  extractor(new SiftDescriptorExtractor);
     BOWImgDescriptorExtractor bowDE(extractor, matcher);
     bowDE.setVocabulary(dictionary);
-
-    Mat img = imread(imagePath, CV_LOAD_IMAGE_GRAYSCALE);
+    Mat bowDescriptor;
+    Mat img;
     vector<KeyPoint> keypoints;
-    detector->detect(img, keypoints);
 
-    bowDE.compute(img, keypoints, bowDescriptor);
+    for (int i = 0; i < imagePaths.size(); i++) {
+        img = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
+        detector->detect(img, keypoints);
+        bowDE.compute(img, keypoints, bowDescriptor);
+        histograms.push_back(bowDescriptor);
+
+    }
+
+    // printing out the contents of the Mat and its properties
+    //
+    //string ty =  type2str( histograms.type() );
+    //printf("Matrix: %s %dx%d \n", ty.c_str(), histograms.cols, histograms.rows );
+    //printContents(histograms);
 
     return 1;
 
 }
 
+/* Extracted Feats in vector for SWIG */
+
+int extractFeats(string trainedFile, vector<string> imagePaths, vector<vector<float> > &extractedFeats) {
+    Mat SIFTfeatures;
+    extractSiftBOW(trainedFile, imagePaths, SIFTfeatures);
+    Mat2vector(SIFTfeatures, extractedFeats);
+}
+
 
 // right now it only measures SIFT but it needs other features next
+// on stand by
 double similarityScore(string image1Path, string image2Path, string trainedFile) {
     Mat histogram1;
     Mat histogram2;
-    extractSift(trainedFile, image1Path, histogram1);
-    extractSift(trainedFile, image2Path, histogram2);
+    vector<string> imagePaths;
+
+    // images need to be passed as an array
+    imagePaths.push_back(image1Path);
+    extractSiftBOW(trainedFile, imagePaths, histogram1);
+
+    imagePaths.pop_back();
+    imagePaths.push_back(image2Path);
+    extractSiftBOW(trainedFile, imagePaths, histogram2);
+
     return compareHist(histogram1, histogram2, CV_COMP_INTERSECT);
 }
 
 
-//int main(int argc, char *argv[]) {
 
-    //string path = "/Users/Glebys/Purdue/machine_learning/FinalProject/ShortAbstractScenes/";
-    //string filename;
-    //vector<string> trainImagePaths;
 
-    //for(int i = 0; i < 30; i++) {
-        //for(int j=0; j<10; j++) {
-            ////char buffer [100];
-            ////int n, a=10000, b=333;
-            ////n=sprintf(buffer, "Scene%d_%d.png", a, b);
-            ////cout << buffer;
-            ////memset (buffer,0,100);
-            ////a=5;
-            ////b=3;
-            ////n=sprintf(buffer, "Scene%d_%d.png", a, b);
-            ////cout << buffer;
-            //stringstream ss;
-            //ss << i;
-            //filename = path + "Scene_" + ss.str() + ".png";
-            //trainImagePaths.push_back(filename);
-        //}
-    //}
+/*int main(int argc, char *argv[]) {
 
-    //cout << "imagePaths " << trainImagePaths.size() << endl;
+    // test sift training
+    string path = "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/data/AbstractScenes/RenderedScenes/";
+    string filename;
+    vector<string> trainImagePaths;
 
-    //string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
-    //trainSift(trainImagePaths, 2, trainedFile);
+    for(int i = 0; i < 10; i++) {
+        stringstream ss;
+        ss << i;
+        filename = path + "Scene0_" + ss.str() + ".png";
+        trainImagePaths.push_back(filename);
+    }
 
-    //string testImage = path + "Scene0_0.png";
-    //for(int i = 0; i < trainImagePaths.size(); i++) {
-        //cout << "Similarity score: " << \
-                //similarityScore(testImage, trainImagePaths[i], trainedFile) \
-                //<< endl;
-    //}
+    cout << "imagePaths " << trainImagePaths.size() << endl;
 
-//}
+    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
+    trainSift(trainImagePaths, 5, trainedFile);
+
+    // test sift extraction
+    vector<string> testImagePaths;
+    Mat extractedFeats;
+    for(int i = 0; i < 10; i++) {
+        stringstream ss;
+        ss << i;
+        filename = path + "Scene1_" + ss.str() + ".png";
+        testImagePaths.push_back(filename);
+    }
+
+    extractSiftBOW(trainedFile, testImagePaths, extractedFeats);
+
+
+}*/
