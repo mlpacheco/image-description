@@ -2,6 +2,8 @@
 
 /* Auxiliary Functions  */
 
+string SIFT_FILENAME = "SIFTWords.yml";
+
 int Mat2vector(Mat mat, vector<vector <float> > &vect) {
     for (int i = 0; i < mat.rows; i++) {
         vector<float> row;
@@ -47,15 +49,29 @@ int printContents(Mat BOWmat) {
     return 1;
 }
 
+string joinPath(string path, string fileName) {
+    string filePath;
+    if (path[path.length()-1] == '/') {
+        filePath = path + fileName;
+    } else {
+        filePath = path + "/" + fileName;
+    }
+    return filePath;
+
+}
+
+
 /* SIFT Functions */
 
 
-int trainSift(vector<String> imagePaths, int numWords, string outfile) {
+int trainSift(vector<String> imagePaths, int numWords, string trainedPath) {
     Mat input;
     vector<KeyPoint> keypoints;
     Mat descriptor;
     Mat featuresUnclustered;
     SiftDescriptorExtractor detector;
+
+    string outfile = joinPath(trainedPath, SIFT_FILENAME);
 
     for (int i = 0; i < imagePaths.size(); i++) {
         input = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
@@ -81,9 +97,13 @@ int trainSift(vector<String> imagePaths, int numWords, string outfile) {
     return 1;
 }
 
-int extractSiftBOW(string trainedFile, vector<string> imagePaths, Mat &histograms) {
+
+int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms) {
 
     Mat dictionary;
+
+    string trainedFile = joinPath(trainedPath, SIFT_FILENAME);
+
     FileStorage fs(trainedFile, FileStorage::READ);
     fs["vocabulary"] >> dictionary;
     fs.release();
@@ -117,27 +137,27 @@ int extractSiftBOW(string trainedFile, vector<string> imagePaths, Mat &histogram
 
 /* Extracted Feats in vector for SWIG */
 
-int extractFeats(string trainedFile, vector<string> imagePaths, vector<vector<float> > &extractedFeats) {
+int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats) {
     Mat SIFTfeatures;
-    extractSiftBOW(trainedFile, imagePaths, SIFTfeatures);
+    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures);
     Mat2vector(SIFTfeatures, extractedFeats);
 }
 
 
 // right now it only measures SIFT but it needs other features next
 // on stand by
-double similarityScore(string image1Path, string image2Path, string trainedFile) {
+double similarityScore(string image1Path, string image2Path, string trainedPath) {
     Mat histogram1;
     Mat histogram2;
     vector<string> imagePaths;
 
     // images need to be passed as an array
     imagePaths.push_back(image1Path);
-    extractSiftBOW(trainedFile, imagePaths, histogram1);
+    extractSiftBOW(trainedPath, imagePaths, histogram1);
 
     imagePaths.pop_back();
     imagePaths.push_back(image2Path);
-    extractSiftBOW(trainedFile, imagePaths, histogram2);
+    extractSiftBOW(trainedPath, imagePaths, histogram2);
 
     return compareHist(histogram1, histogram2, CV_COMP_INTERSECT);
 }

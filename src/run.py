@@ -3,7 +3,12 @@ import os
 from random import shuffle
 import re
 
-import nn
+# features
+import sentences
+import images
+
+# algorithms
+
 def get_last_sentence(f_name):
     with open(f_name, 'rb') as fh:
         offs = -100
@@ -95,9 +100,9 @@ def main():
                       dest='source', type='string')
     parser.add_option('-t', '--target', help='path to target domain dir',
                       dest='target', type='string')
-    parser.add_option('--so', help='output file for sentence instances',
+    parser.add_option('--so', help='output path for sentence files',
                       dest='out_sentence', type='string')
-    parser.add_option('--io', help='output file for image instances',
+    parser.add_option('--io', help='output path for image files',
                       dest='out_image', type='string')
     parser.add_option('--rt', help='ratio of examples for training',
                       dest='train_ratio', type='int', default=0.7)
@@ -114,15 +119,9 @@ def main():
 
     train_sen, train_img, val_sen, val_img, test_sen, test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
 
-    nn.train_sentence_features(train_sen, opts.out_sentence)
-    nn.train_image_features(train_img, 256, opts.out_image)
-
-    test_index = test_sen.keys()[0]
-    print nn.max_sentence_similarity(test_sen[test_index], train_sen,
-                                     opts.out_sentence, len(train_sen))
-
-    print nn.max_image_similarity(test_img[test_index], train_img,
-                                  opts.out_image)
+    #sentences.train_lda(train_sen, 10, opts.out_sentence)
+    sentences.train_bow(train_sen, opts.out_sentence)
+    images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
 
 
 if __name__ == "__main__":

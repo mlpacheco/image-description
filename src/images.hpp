@@ -19,10 +19,10 @@ string type2str(int type);
 int printContents(Mat BOWmat);
 
 // SIFT Functions
-int trainSift(vector<String> imagePaths, int numWords, string outfile);
-int extractSiftBOW(string trainedFile, vector<string> imagePaths, Mat &histograms);
+int trainSift(vector<String> imagePaths, int numWords, string trainedPath);
+int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms);
 
 // Extraction and Similarity Interfaces
-int extractFeats(string trainedFile, vector<string> imagePaths, vector<vector<float> > &extractedFeats);
-double similarityScore(string image1Path, string image2Path, string trainedFile);
+int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats);
+double similarityScore(string image1Path, string image2Path, string trainedPath);
 

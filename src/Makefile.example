@@ -41,7 +41,7 @@ _images.so: $(OBJECTS)
 
 
 clean:
-		rm -f *.o *.cxx *.pyc *.so images.py
+		rm -f *.o *.cxx *.pyc *.so images.py *.gch
 
 # necessary hack for python import on OSX when using Macports-python instead of Apple-python
 mac_hack:

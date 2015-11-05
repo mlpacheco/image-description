@@ -15,14 +15,14 @@ namespace std {
 
 int trainSift(std::vector<std::string> imagePaths,
               int numWords,
-              std::string outfile);
+              std::string trainedPath);
 
-int extractFeats(std::string trainedFile,
+int extractFeats(std::string trainedPath,
                  std::vector<std::string> imagePaths,
                  std::vector<std::vector<float> > &extractedFeats);
 
 double similarityScore(std::string image1Path,
                        std::string image2Path,
-                       std::string trainedFile);
+                       std::string trainedPath);
 
 
