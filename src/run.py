@@ -10,6 +10,7 @@ import images
 # algorithms
 from sklearn.cross_decomposition import CCA
 
+### GENERAL ###
 def get_last_sentence(f_name):
     with open(f_name, 'rb') as fh:
         offs = -100
@@ -22,11 +23,18 @@ def get_last_sentence(f_name):
             offs *= 2
         return last
 
+def image_num(file_name):
+    with open(file_name) as f:
+        for i, l in enumerate(f):
+            pass
+    return (i + 1)/5
+
 def get_splits(total, train_ratio, val_ratio):
     num_train = int(total*train_ratio)
     num_val = int(total*val_ratio)
     return num_train, num_val
 
+### MICROSOFT ###
 def get_split_ids_microsoft(domain, train_ratio, val_ratio):
     filename = os.path.join(domain, "SimpleSentences", "SimpleSentences1_10020.txt")
     last_sentence  = get_last_sentence(filename)
@@ -86,16 +94,72 @@ def parse_microsoft_dataset(domain, train_ratio, val_ratio):
     train_img, val_img, test_img = parse_microsoft_images(domain, train_ids, val_ids)
     return train_sen, train_img, val_sen, val_img, test_sen, test_img
 
+### FLICKR ###
+def get_split_ids_flickr30k(domain, train_ratio, val_ratio):
+    sentences_path = os.path.join(domain, 'flickr30k', 'results_20130124.token')
+    total_image_num = image_num(sentences_path)
+    num_train, num_val = get_splits(total_image_num, train_ratio, val_ratio)
+    ids = [i for i in xrange(0, total_image_num)]
+    shuffle(ids)
+    return set(ids[:num_train]),\
+           set(ids[num_train:num_train+num_val])
 
-def parse_flickr30k_sentences(domain):
-    pass
+def parse_flickr30k_sentences(domain, train_index, val_index):
+    filename = os.path.join(domain, "flickr30k", "results_20130124.token")
+    train_data = {}; val_data = {}; test_data = {}; index = 0;
+    prev_image_index = None
+    with open(filename) as f:
+        f = f.readlines()
+        for s in f:
+            image_index = int(s.split('.', 1)[0])
+            s = s.split('\t', 1)[1]
+            s = s.strip()
+            #Check if we are reading a sentence for the next image
+            if prev_image_index and prev_image_index!=image_index:
+                index +=1
 
 
-def parse_flickr30k_images(domain):
-    pass
+            if index in train_index:
+                sentences = train_data
+            elif index in val_index:
+                sentences = val_data
+            else:
+                sentences = test_data
 
+            if image_index in sentences:
+                sentences[image_index] += " " + s
+            else:
+                sentences[image_index] = s
+            prev_image_index = image_index
+    return train_data, val_data, test_data
+
+
+def parse_flickr30k_images(domain, train_ids, val_ids):
+    path = os.path.join(domain, "flickr30k-images")
+    train_img = {}; val_img = {}; test_img = {}
+    for f in os.listdir(path):
+        # Ignore hidden files
+        if not f.startswith('.'):
+            filepath = os.path.join(path, f)
+            if os.path.isfile(filepath):
+                index = int(f.split('.', 1)[0])
+                if index in train_ids:
+                    train_img[index] = filepath
+                elif index in val_ids:
+                    val_img[index] = filepath
+                else:
+                    test_img[index] = filepath
+    return train_img, val_img, test_img
+
+def parse_flickr30k_dataset(domain, train_ratio, val_ratio):
+    train_ids, val_ids = get_split_ids_flickr30k(domain, train_ratio, val_ratio)
+    train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids)
+    train_img, val_img, test_img = parse_flickr30k_images(domain, set(train_sen.keys()), set(val_sen.keys()))
+    return train_sen, train_img, val_sen, val_img, test_sen, test_img
+
+### MAIN ###
 def main():
-    parser = optparse.OptionParser()
+    parser = opt.parse.OptionParser()
     parser.add_option('-s', '--source', help='path to source domain dir',
                       dest='source', type='string')
     parser.add_option('-t', '--target', help='path to target domain dir',
@@ -117,11 +181,22 @@ def main():
             parser.print_help()
             exit(-1)
 
-    train_sen, train_img, val_sen, val_img, test_sen, test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    print "PARSING################"
+    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    #m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    #print "Training###############"
+    #print train_sen
+    #print train_img
+    #print "Validation################"
+    #print val_sen
+    #print val_img
+    #print "testing################"
+    #print test_sen
+    #print test_img
 
     #sentences.train_lda(train_sen, 10, opts.out_sentence)
-    sentences.train_bow(train_sen, opts.out_sentence)
-    images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
+    #sentences.train_bow(train_sen, opts.out_sentence)
+    #images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
 
     #train_sen_feat = sentences.extract_lda(train_sen, 10, opts.out_sentence)
     train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence)
