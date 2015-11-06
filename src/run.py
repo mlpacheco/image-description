@@ -8,6 +8,7 @@ import sentences
 import images
 
 # algorithms
+from sklearn.cross_decomposition import CCA
 
 def get_last_sentence(f_name):
     with open(f_name, 'rb') as fh:
@@ -93,7 +94,6 @@ def parse_flickr30k_sentences(domain):
 def parse_flickr30k_images(domain):
     pass
 
-
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-s', '--source', help='path to source domain dir',
@@ -122,6 +122,19 @@ def main():
     #sentences.train_lda(train_sen, 10, opts.out_sentence)
     sentences.train_bow(train_sen, opts.out_sentence)
     images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
+
+    #train_sen_feat = sentences.extract_lda(train_sen, 10, opts.out_sentence)
+    train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence)
+
+    train_img_feat = FeaturesMatrix()
+    images.extractFeats(opts.out_image, images.PathSet(train_img.values()), train_img_feat)
+    print train_img_feat
+    print len(train_img_feat)
+    print len(train_img_feat[0])
+
+    #cca = CCA(n_components=9)
+    #cca.fit(train_sen_feat, train_img_feat)
+
 
 
 if __name__ == "__main__":

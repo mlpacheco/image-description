@@ -3,6 +3,7 @@ from gensim import corpora, models
 from os.path import join
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 # Default filenames
 LDA_FILENAME = "lda.pkl"
@@ -45,12 +46,29 @@ def train_lda(sentences, k, path):
     model = models.LdaModel(corpus, num_topics=k, id2word=dictionary, iterations=1000)
     topics = model.show_topics(num_topics=k, num_words=5)
 
-    for topic in topics:
-        print topic
+    #for topic in topics:
+    #    print topic
 
     ## save trained dictionary and model in files
     dictionary.save_as_text(dict_filename)
     model.save(model_filename)
+
+def extract_lda(sentences, k, path):
+    dict_filename = join(path, DICT_FILENAME)
+    model_filename = join(path, LDA_FILENAME)
+    dictionary = corpora.Dictionary.load_from_text(dict_filename)
+    model = models.LdaModel.load(model_filename)
+
+    documents = [x.split() for x in sentences.values()]
+
+    ret = []
+    for d in documents:
+        feats = [0.0]*k
+        topics = model[dictionary.doc2bow(d)]
+        for (i,p) in topics:
+            feats[i] = p
+        ret.append(feats)
+    return np.asarray(ret)
 
 
 def train_bow(sentences, path):
@@ -60,3 +78,7 @@ def train_bow(sentences, path):
     vectorizer.fit(sentences.values())
     joblib.dump(vectorizer, tfidf_filename)
 
+def extract_bow(sentences, path):
+    tfidf_filename = join(path, BOW_FILENAME)
+    vectorizer = joblib.load(tfidf_filename)
+    return vectorizer.transform(sentences.values())
