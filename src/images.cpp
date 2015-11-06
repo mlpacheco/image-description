@@ -8,9 +8,9 @@ int Mat2vector(Mat mat, vector<vector <float> > &vect) {
     for (int i = 0; i < mat.rows; i++) {
         vector<float> row;
         for (int j = 0; j < mat.cols; j++) {
-            row[j] = mat.at<float>(i,j);
+            row.push_back(mat.at<float>(i,j));
         }
-        vect[i] = row;
+        vect.push_back(row);
     }
 }
 
@@ -47,6 +47,15 @@ int printContents(Mat BOWmat) {
     }
 
     return 1;
+}
+
+int printVector(vector<vector<float> > vect) {
+    for (int i = 0; i < vect.size(); i++) {
+        for (int j = 0; j < vect[i].size(); j++) {
+            cout << vect[i][j] << " ";
+        }
+        cout << endl;
+    }
 }
 
 string joinPath(string path, string fileName) {
@@ -181,7 +190,7 @@ double similarityScore(string image1Path, string image2Path, string trainedPath)
 
     cout << "imagePaths " << trainImagePaths.size() << endl;
 
-    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/SIFTwords.yml";
+    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/images/";
     trainSift(trainImagePaths, 5, trainedFile);
 
     // test sift extraction
@@ -195,6 +204,13 @@ double similarityScore(string image1Path, string image2Path, string trainedPath)
     }
 
     extractSiftBOW(trainedFile, testImagePaths, extractedFeats);
+    printContents(extractedFeats);
+
+    cout << endl << endl;
+    vector<vector<float> > vectFeats;
+    Mat2vector(extractedFeats, vectFeats);
+    printVector(vectFeats);
+
 
 
 }*/
