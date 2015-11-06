@@ -2,6 +2,7 @@ import optparse
 import os
 from random import shuffle
 import re
+import numpy as np
 
 # features
 import sentences
@@ -9,6 +10,7 @@ import images
 
 # algorithms
 from sklearn.cross_decomposition import CCA
+from sklearn.metrics.pairwise import pairwise_distances
 
 ### GENERAL ###
 def get_last_sentence(f_name):
@@ -157,6 +159,12 @@ def parse_flickr30k_dataset(domain, train_ratio, val_ratio):
     train_img, val_img, test_img = parse_flickr30k_images(domain, set(train_sen.keys()), set(val_sen.keys()))
     return train_sen, train_img, val_sen, val_img, test_sen, test_img
 
+def merge_two_dicts(x, y):
+    '''Given two dicts, merge them into a new dict as a shallow copy.'''
+    z = x.copy()
+    z.update(y)
+    return z
+
 ### MAIN ###
 def main():
     parser = optparse.OptionParser()
@@ -168,10 +176,12 @@ def main():
                       dest='out_sentence', type='string')
     parser.add_option('--io', help='output path for image files',
                       dest='out_image', type='string')
-    parser.add_option('--rt', help='ratio of examples for training',
-                      dest='train_ratio', type='int', default=0.7)
-    parser.add_option('--rv', help='ratio of examples for validation',
-                      dest='val_ratio', type='int', default=0.0)
+    parser.add_option('--rts', help='ratio of examples for training',
+                      dest='train_ratio_source', type='float', default=1.0)
+    parser.add_option('--rtg', help='ratio of examples for training',
+                      dest='train_ratio_target', type='float', default=0.3)
+    #parser.add_option('--rvs', help='ratio of examples for validation', ## pasarle 0.5
+    #                  dest='val_ratio', type='int', default=0.0)
     (opts, args) = parser.parse_args()
 
     mandatories = ['source', 'target', 'out_image', 'out_sentence']
@@ -182,8 +192,18 @@ def main():
             exit(-1)
 
     print "PARSING################"
-    #f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.source, opts.train_ratio, opts.val_ratio)
-    train_sen, train_img, val_sen, val_img, test_sen, test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.train_ratio_target, 0.0)
+    m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.train_ratio_source, 0.0)
+
+
+    print "Training with -> ", "Microsoft: ", len(m_train_sen), "Flickr: ", len(f_train_sen)
+
+    train_sen = merge_two_dicts(f_train_sen, m_train_sen)
+    train_img = merge_two_dicts(f_train_img, m_train_img)
+    test_sen = f_test_sen
+    test_img = f_test_img
+    print "Parsing complete"
+
     #print "Training###############"
     #print train_sen
     #print train_img
@@ -195,20 +215,76 @@ def main():
     #print test_img
 
     #sentences.train_lda(train_sen, 10, opts.out_sentence)
-    #sentences.train_bow(train_sen, opts.out_sentence)
+    sentences.train_bow(train_sen, opts.out_sentence)
     images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
+    print "Training features complete"
 
     #train_sen_feat = sentences.extract_lda(train_sen, 10, opts.out_sentence)
-    #train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence)
-
+    train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence).toarray()
     train_img_feat = images.FeaturesMatrix()
     images.extractFeats(opts.out_image, images.PathSet(train_img.values()), train_img_feat)
-    print train_img_feat
-    print len(train_img_feat)
-    print len(train_img_feat[0])
+    train_img_feat = np.asarray(train_img_feat)
+    print "Extraction of feats complete"
+    print "Sentences: ", train_sen_feat.shape
+    print "Images: ", train_img_feat.shape
 
-    #cca = CCA(n_components=9)
-    #cca.fit(train_sen_feat, train_img_feat)
+    cca = CCA(n_components=9)
+    cca.fit(train_sen_feat, train_img_feat)
+
+    print "CCA done"
+    print cca
+
+    #sen_train_c, img_train_c = cca.transform(train_sen_feat, train_img_feat)
+
+
+    test_sen_feat = sentences.extract_bow(test_sen, opts.out_sentence).toarray()
+    test_img_feat = images.FeaturesMatrix()
+    images.extractFeats(opts.out_image, images.PathSet(test_img.values()), test_img_feat)
+
+    test_sen_c, test_img_c = cca.transform(test_sen_feat, test_img_feat)
+    print "Testing set after transformation"
+    print "Sentences: ", test_sen_c.shape
+    print "Images: ", test_img_c.shape
+
+    l1_all = {}; l2_all = {}; cosine_all = {} # cosine is similarity measure
+
+    for i in xrange(0, len(test_sen_c)):
+        X = test_sen_c[i]
+        l1 = []; l2 = []; cosine = [];
+        for j in xrange(0, len(test_sen_c)):
+            Y = test_img_c[j]
+            index = test_sen.keys()[j]
+            l1.append((pairwise_distances(X, Y, metric='l1')[0][0], j))
+            l2.append((pairwise_distances(X, Y, metric='l2')[0][0], j))
+            cosine.append((pairwise_distances(X, Y, metric='cosine')[0][0], j))
+
+        l1.sort()
+        l1 = l1[:5]
+        l2.sort()
+        l2 = l2[:5]
+        cosine.sort(reverse=1)
+        cosine = cosine[:5]
+
+        l1_all[i] = [index for (metric,index) in l1]
+        l2_all[i] = [index for (metric,index) in l2]
+        cosine_all[i] = [index for (metric,index) in cosine]
+
+    for r in [1,5,10]:
+        hits_l1 = 0.0; hits_l2 = 0.0; hits_cosine = 0.0
+        for i in xrange(0, len(test_sen_c)):
+
+            index = test_sen.keys()[i]
+            if index in l1_all[i][:r]:
+                hits_l1+=1
+            if index in l2_all[i][:r]:
+                hits_l2+=1
+            if index in cosine_all[i][:r]:
+                hits_cosine+=1
+
+        print "R@{0} w/ L1: ".format(r), hits_l1/len(test_sen_c)
+        print "R@{0} w/ L2: ".format(r), hits_l2/len(test_sen_c)
+        print "R@{0} w/ Cosine: ".format(r), hits_cosine/len(test_sen_c)
+
 
 
 
