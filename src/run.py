@@ -159,7 +159,7 @@ def parse_flickr30k_dataset(domain, train_ratio, val_ratio):
 
 ### MAIN ###
 def main():
-    parser = opt.parse.OptionParser()
+    parser = optparse.OptionParser()
     parser.add_option('-s', '--source', help='path to source domain dir',
                       dest='source', type='string')
     parser.add_option('-t', '--target', help='path to target domain dir',
@@ -182,8 +182,8 @@ def main():
             exit(-1)
 
     print "PARSING################"
-    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.source, opts.train_ratio, opts.val_ratio)
-    #m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    #f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.source, opts.train_ratio, opts.val_ratio)
+    train_sen, train_img, val_sen, val_img, test_sen, test_img = parse_microsoft_dataset(opts.source, opts.train_ratio, opts.val_ratio)
     #print "Training###############"
     #print train_sen
     #print train_img
@@ -196,12 +196,12 @@ def main():
 
     #sentences.train_lda(train_sen, 10, opts.out_sentence)
     #sentences.train_bow(train_sen, opts.out_sentence)
-    #images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
+    images.trainSift(images.PathSet(train_img.values()), 256, opts.out_image)
 
     #train_sen_feat = sentences.extract_lda(train_sen, 10, opts.out_sentence)
-    train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence)
+    #train_sen_feat = sentences.extract_bow(train_sen, opts.out_sentence)
 
-    train_img_feat = FeaturesMatrix()
+    train_img_feat = images.FeaturesMatrix()
     images.extractFeats(opts.out_image, images.PathSet(train_img.values()), train_img_feat)
     print train_img_feat
     print len(train_img_feat)
