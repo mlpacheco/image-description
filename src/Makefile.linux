@@ -1,0 +1,38 @@
+.PHONY: all clean
+
+CPP = g++
+SWIG = swig
+
+SW_FLAGS = -c++ -python
+CPP_FLAGS = -c -fPIC
+
+OBJECTS = images.o images_wrap.o
+
+LDFLAGS = -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann \
+          -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_nonfree \
+          -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_ts \
+          -lopencv_video -lopencv_videostab
+
+SW_LDFLAGS = -shared 
+
+INCLUDES = -I'/usr/include/opencv' -I'/usr/include/python2.7'
+
+LIB_INCLUDES = -L'/usr/lib/python2.7/config'
+
+all: _images.so
+
+images_wrap.cxx: images.i
+		$(SWIG) $(SW_FLAGS) $<
+
+images_wrap.o: images_wrap.cxx
+		$(CPP) $(CPP_FLAGS) $(INCLUDES) $(LIB_INCLUDES) $<
+
+images.o: images.cpp
+		$(CPP) $(CPP_FLAGS) $(INCLUDES) $(LIB_INCLUDES) $(LDFLAGS) $(SW_LDFLAGS) $< -o $@
+
+_images.so: $(OBJECTS)
+		$(CPP) $(SW_LDFLAGS) $^ -o $@
+
+
+clean:
+		rm -f *.o *.cxx *.pyc *.so images.py *.gch
