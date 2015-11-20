@@ -15,15 +15,17 @@ LDFLAGS = -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -l
 
 SW_LDFLAGS = -lpython -dynamiclib
 
-INCLUDES = -I'/opt/local/include/opencv' \
-					 -I'/opt/local/include' \
-					 -I'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7'
+# Change this to where your system installs are
+INCLUDES = -I'/usr/local/include/opencv' \
+		   -I'/usr/local/include' \
+		   -I'/usr/local/Cellar/python/2.7.10_2/Frameworks/Python.framework/Versions/2.7/include/python2.7'
 
-LIB_INCLUDES = -L'/opt/local/lib'\
-               -L'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config'
+# Change this to where your system installs are
+LIB_INCLUDES = -L'/usr/local/lib'\
+               -L'/usr/local/Cellar/python/2.7.10_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config'
 
 LIB_APPLE = '/System/Library/Frameworks/Python.framework/Versions/2.7/Python'
-LIB_PORTS = '/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib'
+LIB_PORTS = '/usr/local/Cellar/python/2.7.10_2/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib'
 
 all: _images.so
 
@@ -41,7 +43,7 @@ _images.so: $(OBJECTS)
 
 
 clean:
-		rm -f *.o *.cxx *.pyc *.so images.py *.gch
+		rm -f *.o *.cxx *.pyc *.so images.py
 
 # necessary hack for python import on OSX when using Macports-python instead of Apple-python
 mac_hack:
