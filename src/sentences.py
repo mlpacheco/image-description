@@ -1,5 +1,5 @@
 from math import log
-from gensim import corpora, models
+#from gensim import corpora, models
 from os.path import join
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
