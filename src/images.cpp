@@ -12,6 +12,7 @@ int Mat2vector(Mat mat, vector<vector <float> > &vect) {
         }
         vect.push_back(row);
     }
+    return 1;
 }
 
 
@@ -56,6 +57,7 @@ int printVector(vector<vector<float> > vect) {
         }
         cout << endl;
     }
+    return 1;
 }
 
 string joinPath(string path, string fileName) {
