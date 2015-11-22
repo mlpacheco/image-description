@@ -16,6 +16,10 @@ images.py
 *.cxx
 
 ### Python ###
+# Serialized objects
+.pkl
+.npy
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
