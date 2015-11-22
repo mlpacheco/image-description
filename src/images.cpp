@@ -81,13 +81,15 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath) {
     SiftDescriptorExtractor detector;
 
     string outfile = joinPath(trainedPath, SIFT_FILENAME);
-
-    for (int i = 0; i < imagePaths.size(); i++) {
+    double total = imagePaths.size();
+    for (int i = 0; i < total; i++) {
         input = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         detector.detect(input, keypoints);
         detector.compute(input, keypoints, descriptor);
         featuresUnclustered.push_back(descriptor);
-
+        cout << i*100/total << "%";
+        cout.flush();
+        cout << "\r";
     }
     // parameters for the algorithm
     // 100 iters
@@ -125,13 +127,16 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
     Mat bowDescriptor;
     Mat img;
     vector<KeyPoint> keypoints;
+    double total = imagePaths.size();
 
-    for (int i = 0; i < imagePaths.size(); i++) {
+    for (int i = 0; i < total; i++) {
         img = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         detector->detect(img, keypoints);
         bowDE.compute(img, keypoints, bowDescriptor);
         histograms.push_back(bowDescriptor);
-
+        cout << i*100/total << "%";
+        cout.flush();
+        cout << '\r';
     }
 
     // printing out the contents of the Mat and its properties
