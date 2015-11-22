@@ -17,8 +17,8 @@ images.py
 
 ### Python ###
 # Serialized objects
-.pkl
-.npy
+*.pkl
+*.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
