@@ -152,6 +152,7 @@ int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<fl
     Mat SIFTfeatures;
     extractSiftBOW(trainedPath, imagePaths, SIFTfeatures);
     Mat2vector(SIFTfeatures, extractedFeats);
+    return 1;
 }
 
 
