@@ -3,12 +3,14 @@ from math import log
 from os.path import join
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import VarianceThreshold
 import numpy as np
 
 # Default filenames
 LDA_FILENAME = "lda.pkl"
 DICT_FILENAME = "dictionary.txt"
 BOW_FILENAME = "BOWvectorizer.pkl"
+SEL_FILENAME = "lowVarSelector.pkl"
 
 # similarity measure proposed by hockenmeier on
 # the NN approach, unable to use it on
@@ -41,7 +43,7 @@ def train_lda(sentences, k, path):
     documents = [x.split() for x in sentences.values()]
     dictionary = corpora.Dictionary(documents)
     # filter extremes?
-    dictionary.filter_extremes(no_below=5, no_above=0.7)
+    dictionary.filter_extremes(no_below=10)
     corpus = map(lambda x: dictionary.doc2bow(x), documents)
     model = models.LdaModel(corpus, num_topics=k, id2word=dictionary, iterations=1000)
     topics = model.show_topics(num_topics=k, num_words=5)
