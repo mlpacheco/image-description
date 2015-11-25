@@ -1,3 +1,6 @@
+#Mac-OS files
+.DS_Store
+
 #Latex Helper files
 *.aux
 *.bbl
@@ -42,6 +45,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.sh
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
