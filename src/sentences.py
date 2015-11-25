@@ -3,12 +3,14 @@ from math import log
 from os.path import join
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import VarianceThreshold
 import numpy as np
 
 # Default filenames
 LDA_FILENAME = "lda.pkl"
 DICT_FILENAME = "dictionary.txt"
 BOW_FILENAME = "BOWvectorizer.pkl"
+SEL_FILENAME = "lowVarSelector.pkl"
 
 # similarity measure proposed by hockenmeier on
 # the NN approach, unable to use it on
@@ -38,10 +40,10 @@ def common_words(s1, s2):
 def train_lda(sentences, k, path):
     dict_filename = join(path, DICT_FILENAME)
     model_filename = join(path, LDA_FILENAME)
-    documents = [x.split() for x in sentences.values()]
+    documents = [x.split() for x in sentences]
     dictionary = corpora.Dictionary(documents)
     # filter extremes?
-    dictionary.filter_extremes(no_below=5, no_above=0.7)
+    dictionary.filter_extremes(no_below=10)
     corpus = map(lambda x: dictionary.doc2bow(x), documents)
     model = models.LdaModel(corpus, num_topics=k, id2word=dictionary, iterations=1000)
     topics = model.show_topics(num_topics=k, num_words=5)
@@ -59,7 +61,7 @@ def extract_lda(sentences, k, path):
     dictionary = corpora.Dictionary.load_from_text(dict_filename)
     model = models.LdaModel.load(model_filename)
 
-    documents = [x.split() for x in sentences.values()]
+    documents = [x.split() for x in sentences]
 
     ret = []
     for d in documents:
@@ -75,10 +77,10 @@ def train_bow(sentences, path):
     ## use of TF-IDF normalization for BOW
     tfidf_filename = join(path, BOW_FILENAME)
     vectorizer = TfidfVectorizer()
-    vectorizer.fit(sentences.values())
+    vectorizer.fit(sentences)
     joblib.dump(vectorizer, tfidf_filename)
 
 def extract_bow(sentences, path):
     tfidf_filename = join(path, BOW_FILENAME)
     vectorizer = joblib.load(tfidf_filename)
-    return vectorizer.transform(sentences.values())
+    return vectorizer.transform(sentences)

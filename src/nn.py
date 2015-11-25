@@ -39,11 +39,13 @@ def max_sentence_similarity(s_query, sentences, filename, train_size):
 def max_image_similarity(i_query, image_list, filename):
     max_sim = 0.0
     #image index and path
+    print "before the loop"
     for i,p in image_list.iteritems():
         curr_sim = images.similarityScore(i_query, p, filename)
         if curr_sim > max_sim:
             max_sim = curr_sim
             pair_index = i
+    print "after the loop"
     return pair_index, max_sim
 
 def score_image():
