@@ -103,19 +103,21 @@ def parse_microsoft_dataset(domain, num_train, num_val, num_test):
     return train_sen, train_img, val_sen, val_img, test_sen, test_img
 
 ### FLICKR ###
-def get_split_ids_flickr30k(domain, num_train, num_val, num_test):
-    sentences_path = os.path.join(domain, 'flickr30k', 'results_20130124.token')
+def get_split_ids_flickr30k(domain, num_train, num_val):
+    sentences_path = os.path.join(domain, 'flickr30k', 'train_sentences.token')
     total_image_num = image_num(sentences_path)
     ids = [i for i in xrange(0, total_image_num)]
     shuffle(ids)
     return set(ids[:num_train]),\
-           set(ids[num_train:num_train+num_val]),\
-           set(ids[num_train+num_val:num_train+num_val+num_test])
+           set(ids[num_train:num_train+num_val])
 
-def parse_flickr30k_sentences(domain, train_index, val_index, test_index):
-    filename = os.path.join(domain, "flickr30k", "results_20130124.token")
+def parse_flickr30k_sentences(domain, train_index, val_index):
+    filename = os.path.join(domain, "flickr30k", "train_sentences.token")
+    test_filename = os.path.join(domain, "flickr30k", "test_sentences.token")
     train_data = {}; val_data = {}; test_data = {}; index = 0;
     prev_image_index = None
+
+    # Process data for training and validation
     with open(filename) as f:
         f = f.readlines()
         for s in f:
@@ -125,14 +127,10 @@ def parse_flickr30k_sentences(domain, train_index, val_index, test_index):
             #Check if we are reading a sentence for the next image
             if prev_image_index and prev_image_index!=image_index:
                 index +=1
-
-
             if index in train_index:
                 sentences = train_data
             elif index in val_index:
                 sentences = val_data
-            elif index in test_index:
-                sentences = test_data
             else:
                 prev_image_index = image_index
                 continue
@@ -141,7 +139,22 @@ def parse_flickr30k_sentences(domain, train_index, val_index, test_index):
                 sentences[image_index] += " " + s
             else:
                 sentences[image_index] = s
-            
+            prev_image_index = image_index
+
+    # Process data for testing
+    with open(test_filename) as f:
+        f = f.readlines()
+        for s in f:
+            image_index = int(s.split('.', 1)[0])
+            s = s.split('\t', 1)[1]
+            s = s.strip()
+            #Check if we are reading a sentence for the next image
+            if prev_image_index and prev_image_index!=image_index:
+                index +=1
+            if image_index in test_data:
+                test_data[image_index] += " " + s
+            else:
+                test_data[image_index] = s
             prev_image_index = image_index
     return train_data, val_data, test_data
 
@@ -165,8 +178,8 @@ def parse_flickr30k_images(domain, train_ids, val_ids, test_ids):
                     continue
     return train_img, val_img, test_img
 
-def parse_flickr30k_dataset(domain, train_num, val_num, test_num):
-    train_ids, val_ids, test_ids = get_split_ids_flickr30k(domain, train_num, val_num, test_num)
+def parse_flickr30k_dataset(domain, train_num, val_num):
+    train_ids, val_ids = get_split_ids_flickr30k(domain, train_num, val_num)
     train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids, test_ids)
     train_img, val_img, test_img = parse_flickr30k_images(domain, set(train_sen.keys()), set(val_sen.keys()), set(test_sen.keys()))
     return train_sen, train_img, val_sen, val_img, test_sen, test_img
@@ -221,11 +234,10 @@ def main():
                       dest='out_image', type='string')
     parser.add_option('-m', '--microsoft', help='number of training examples of source domain',\
                       dest='num_microsoft_train', type='int')
-    parser.add_option('-n', '--num', help='number of testing examples', dest='num_test', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
     (opts, args) = parser.parse_args()
 
-    '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'num_test', 'out_file']
+    '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
     for m in mandatories:
         if not opts.__dict__[m]:
             print m
@@ -234,7 +246,7 @@ def main():
             exit(i-1)'''
     print opts
     print "PARSING################"
-    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0, opts.num_test)
+    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
     m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
 
     print "Training with -> ", "Microsoft: ", len(m_train_sen), len(m_train_img), "Flickr: ", len(f_train_sen), len(f_train_sen)
@@ -251,7 +263,7 @@ def main():
     print "Test images", len(f_test_img)
 
     value_sen, value_img = re_index(train_sen, train_img)
-    
+
     #sentences.train_lda(value_sen, 10, opts.out_sentence)
     sentences.train_bow(value_sen, opts.out_sentence)
     images.trainSift(images.PathSet(value_img), 256, opts.out_image)
@@ -259,7 +271,7 @@ def main():
 
     #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
     train_sen_feat = sentences.extract_bow(value_sen, opts.out_sentence).toarray()
-    
+
     train_img_feat = images.FeaturesMatrix()
     bad_image_indexes = images.BadIndexes()
     images.extractFeats(opts.out_image, images.PathSet(value_img), train_img_feat, bad_image_indexes)
@@ -269,7 +281,7 @@ def main():
     print "Extraction of feats complete"
     print "Sentences: ", train_sen_feat.shape
     print "Images: ", train_img_feat.shape
-    
+
     cca = CCA(n_components=9)
     cca.fit(train_sen_feat, train_img_feat)
     #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
