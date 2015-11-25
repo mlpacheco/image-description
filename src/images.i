@@ -7,6 +7,7 @@ namespace std {
     %template(PathSet)  vector<string>;
     %template(Features) vector<float>;
     %template(FeaturesMatrix) vector<vector<float> >;
+    %template(BadIndexes) vector<int>;
 }
 
 %{
@@ -19,10 +20,11 @@ int trainSift(std::vector<std::string> imagePaths,
 
 int extractFeats(std::string trainedPath,
                  std::vector<std::string> imagePaths,
-                 std::vector<std::vector<float> > &extractedFeats);
+                 std::vector<std::vector<float> > &extractedFeats,
+                 std::vector<int> &problematicImages);
 
-double similarityScore(std::string image1Path,
+/*double similarityScore(std::string image1Path,
                        std::string image2Path,
-                       std::string trainedPath);
+                       std::string trainedPath);*/
 
 

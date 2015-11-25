@@ -5,6 +5,9 @@
 string SIFT_FILENAME = "SIFTWords.yml";
 
 int Mat2vector(Mat mat, vector<vector <float> > &vect) {
+    /*cout << "################## Copying mat to vector " << endl;
+    cout << "MAT ROWS: " << mat.rows << endl;;
+    cout << "MAT COLS:  " << mat.cols << endl;*/
     for (int i = 0; i < mat.rows; i++) {
         vector<float> row;
         for (int j = 0; j < mat.cols; j++) {
@@ -112,8 +115,8 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath) {
 }
 
 
-int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms) {
-
+int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, vector<int> &problematicImages) {
+    int a = 1;
     Mat dictionary;
 
     string trainedFile = joinPath(trainedPath, SIFT_FILENAME);
@@ -130,9 +133,10 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
     Mat bowDescriptor;
     Mat img;
     vector<KeyPoint> keypoints;
+    
     double total = imagePaths.size();
-    //Mat m1;
     cout << "extracting " << total << " images." << endl;
+    
     for (int i = 0; i < total; i++) {
         img = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         detector->detect(img, keypoints);
@@ -141,8 +145,11 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
         cout << i*100/total << "%";
         cout.flush();
         cout << '\r'; 
-        //m1 = Mat::zeros(1, 10, CV_64FC1); 
-        //histograms.push_back(m1);
+        
+        if (i + a != histograms.rows) {
+            a--;
+            problematicImages.push_back(i);
+        }
     }
 
     // printing out the contents of the Mat and its properties
@@ -157,9 +164,9 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
 
 /* Extracted Feats in vector for SWIG */
 
-int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats) {
+int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages) {
     Mat SIFTfeatures;
-    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures);
+    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures, problematicImages);
     Mat2vector(SIFTfeatures, extractedFeats);
     return 1;
 }
@@ -167,7 +174,7 @@ int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<fl
 
 // right now it only measures SIFT but it needs other features next
 // on stand by
-double similarityScore(string image1Path, string image2Path, string trainedPath) {
+/*double similarityScore(string image1Path, string image2Path, string trainedPath) {
     Mat histogram1;
     Mat histogram2;
     vector<string> imagePaths;
@@ -181,7 +188,7 @@ double similarityScore(string image1Path, string image2Path, string trainedPath)
     extractSiftBOW(trainedPath, imagePaths, histogram2);
 
     return compareHist(histogram1, histogram2, CV_COMP_INTERSECT);
-}
+}*/
 
 
 

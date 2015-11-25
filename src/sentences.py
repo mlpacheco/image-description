@@ -40,7 +40,7 @@ def common_words(s1, s2):
 def train_lda(sentences, k, path):
     dict_filename = join(path, DICT_FILENAME)
     model_filename = join(path, LDA_FILENAME)
-    documents = [x.split() for x in sentences.values()]
+    documents = [x.split() for x in sentences]
     dictionary = corpora.Dictionary(documents)
     # filter extremes?
     dictionary.filter_extremes(no_below=10)
@@ -61,7 +61,7 @@ def extract_lda(sentences, k, path):
     dictionary = corpora.Dictionary.load_from_text(dict_filename)
     model = models.LdaModel.load(model_filename)
 
-    documents = [x.split() for x in sentences.values()]
+    documents = [x.split() for x in sentences]
 
     ret = []
     for d in documents:
@@ -77,10 +77,10 @@ def train_bow(sentences, path):
     ## use of TF-IDF normalization for BOW
     tfidf_filename = join(path, BOW_FILENAME)
     vectorizer = TfidfVectorizer()
-    vectorizer.fit(sentences.values())
+    vectorizer.fit(sentences)
     joblib.dump(vectorizer, tfidf_filename)
 
 def extract_bow(sentences, path):
     tfidf_filename = join(path, BOW_FILENAME)
     vectorizer = joblib.load(tfidf_filename)
-    return vectorizer.transform(sentences.values())
+    return vectorizer.transform(sentences)
