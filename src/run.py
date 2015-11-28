@@ -1,6 +1,6 @@
 import optparse
 import os
-from random import shuffle
+from random import shuffle, randint
 import re
 import numpy as np
 
@@ -180,7 +180,7 @@ def parse_flickr30k_images(domain, train_ids, val_ids, test_ids):
 
 def parse_flickr30k_dataset(domain, train_num, val_num):
     train_ids, val_ids = get_split_ids_flickr30k(domain, train_num, val_num)
-    train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids, test_ids)
+    train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids)
     train_img, val_img, test_img = parse_flickr30k_images(domain, set(train_sen.keys()), set(val_sen.keys()), set(test_sen.keys()))
     return train_sen, train_img, val_sen, val_img, test_sen, test_img
 
@@ -235,6 +235,7 @@ def main():
     parser.add_option('-m', '--microsoft', help='number of training examples of source domain',\
                       dest='num_microsoft_train', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
+    parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true')
     (opts, args) = parser.parse_args()
 
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
@@ -259,88 +260,95 @@ def main():
 
     print "Train sentences", len(train_sen)
     print "Train images", len(train_img)
-    print "Test sentences", len(f_test_sen)
-    print "Test images", len(f_test_img)
+    print "Test sentences", len(test_sen)
+    print "Test images", len(test_img)
 
-    value_sen, value_img = re_index(train_sen, train_img)
+    value_sen_train, value_img_train = re_index(train_sen, train_img)
+    value_sen_test, value_img_test = re_index(test_sen, test_img)
+    if not opts.random:    
 
-    #sentences.train_lda(value_sen, 10, opts.out_sentence)
-    sentences.train_bow(value_sen, opts.out_sentence)
-    images.trainSift(images.PathSet(value_img), 256, opts.out_image)
-    print "Training features complete"
+        #sentences.train_lda(value_sen, 10, opts.out_sentence)
+        sentences.train_bow(value_sen_train, opts.out_sentence)
+        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image)
+        print "Training features complete"
 
-    #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
-    train_sen_feat = sentences.extract_bow(value_sen, opts.out_sentence).toarray()
+        #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
+        train_sen_feat = sentences.extract_bow(value_sen_train, opts.out_sentence).toarray()
 
-    train_img_feat = images.FeaturesMatrix()
-    bad_image_indexes = images.BadIndexes()
-    images.extractFeats(opts.out_image, images.PathSet(value_img), train_img_feat, bad_image_indexes)
-    train_img_feat = np.asarray(train_img_feat)
-    train_sen_feat = np.delete(train_sen_feat, tuple(bad_image_indexes), axis=0)
+        train_img_feat = images.FeaturesMatrix()
+        bad_image_indexes = images.BadIndexes()
+        images.extractFeats(opts.out_image, images.PathSet(value_img_train), train_img_feat, bad_image_indexes)
+        train_img_feat = np.asarray(train_img_feat)
+        train_sen_feat = np.delete(train_sen_feat, tuple(bad_image_indexes), axis=0)
 
-    print "Extraction of feats complete"
-    print "Sentences: ", train_sen_feat.shape
-    print "Images: ", train_img_feat.shape
+        print "Extraction of feats complete"
+        print "Sentences: ", train_sen_feat.shape
+        print "Images: ", train_img_feat.shape
 
-    cca = CCA(n_components=9)
-    cca.fit(train_sen_feat, train_img_feat)
-    #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
-    #cca.train([train_sen_feat, train_img_feat])
+        cca = CCA(n_components=9)
+        cca.fit(train_sen_feat, train_img_feat)
+        #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
+        #cca.train([train_sen_feat, train_img_feat])
 
-    print "CCA done"
-    print cca
-    
-    value_sen, value_img = re_index(test_sen, test_img)
-    
-    test_sen_feat = sentences.extract_bow(value_sen, opts.out_sentence).toarray()
-    test_img_feat = images.FeaturesMatrix()
-    bad_image_indexes = images.BadIndexes()
-    images.extractFeats(opts.out_image, images.PathSet(value_img), test_img_feat, bad_image_indexes)
-    test_img_feat = np.asarray(test_img_feat)
-    print "test_sen_feat", test_sen_feat.shape
-    print "test_img_feat", test_img_feat.shape
-    
-    test_sen_c, test_img_c = cca.transform(test_sen_feat, test_img_feat)
-    print "test_sen_cca", test_sen_c.shape
-    print "test_img_cca", test_img_c.shape
-    #ev = cca.compute_ev([test_sen_feat, test_img_feat])
-    #print ev
-    
-    print "Testing set after transformation"
-    print "Sentences: ", test_sen_c.shape
-    print "Images: ", test_img_c.shape
+        print "CCA done"
+        print cca
+        
+        test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence).toarray()
+        test_img_feat = images.FeaturesMatrix()
+        bad_image_indexes = images.BadIndexes()
+        images.extractFeats(opts.out_image, images.PathSet(value_img_test), test_img_feat, bad_image_indexes)
+        test_img_feat = np.asarray(test_img_feat)
+        print "test_sen_feat", test_sen_feat.shape
+        print "test_img_feat", test_img_feat.shape
+        
+        test_sen_c, test_img_c = cca.transform(test_sen_feat, test_img_feat)
+        print "test_sen_cca", test_sen_c.shape
+        print "test_img_cca", test_img_c.shape
+        #ev = cca.compute_ev([test_sen_feat, test_img_feat])
+        #print ev
+        
+        print "Testing set after transformation"
+        print "Sentences: ", test_sen_c.shape
+        print "Images: ", test_img_c.shape
 
-    l1_all = {}; l2_all = {}; cosine_all = {} # cosine is similarity measure
-    pred_index_l1 = []; pred_index_l2 = []; pred_index_cosine = []
-    print "Predicting... "
+        l1_all = {}; l2_all = {}; cosine_all = {} # cosine is similarity measure
+        pred_index_l1 = []; pred_index_l2 = []; pred_index_cosine = []
+        print "Predicting... "
 
-    for i in xrange(0, len(test_sen_c)):
-        X = test_sen_c[i]
-        l1 = []; l2 = []; cosine = [];
-        for j in xrange(0, len(test_sen_c)):
-            Y = test_img_c[j]
+        for i in xrange(0, len(test_sen_c)):
+            X = test_sen_c[i]
+            l1 = []; l2 = []; cosine = [];
+            for j in xrange(0, len(test_sen_c)):
+                Y = test_img_c[j]
 
-            l1.append((pairwise_distances(X, Y, metric='l1')[0][0], j))
-            l2.append((pairwise_distances(X, Y, metric='l2')[0][0], j))
-            cosine.append((pairwise_distances(X, Y, metric='cosine')[0][0], j))
+                l1.append((pairwise_distances(X, Y, metric='l1')[0][0], j))
+                l2.append((pairwise_distances(X, Y, metric='l2')[0][0], j))
+                cosine.append((pairwise_distances(X, Y, metric='cosine')[0][0], j))
 
-        l1.sort()
-        l2.sort()
-        cosine.sort(reverse=1)
+            l1.sort()
+            l2.sort()
+            cosine.sort(reverse=1)
 
-        l1_all[i] = [index for (metric,index) in l1]
-        l2_all[i] = [index for (metric,index) in l2]
-        cosine_all[i] = [index for (metric,index) in cosine]
+            l1_all[i] = [index for (metric,index) in l1]
+            l2_all[i] = [index for (metric,index) in l2]
+            cosine_all[i] = [index for (metric,index) in cosine]
 
-        pred_index_l1.append(l1_all[i].index(i))
-        pred_index_l2.append(l2_all[i].index(i))
-        pred_index_cosine.append(cosine_all[i].index(i))
-    
+            pred_index_l1.append(l1_all[i].index(i))
+            pred_index_l2.append(l2_all[i].index(i))
+            pred_index_cosine.append(cosine_all[i].index(i))
+        
 
-    write_to_file(pred_index_l1, opts.out_file + '_l1.out')
-    write_to_file(pred_index_l2, opts.out_file + '_l2.out')
-    write_to_file(pred_index_cosine, opts.out_file + '_cosine.out')
-
+        write_to_file(pred_index_l1, opts.out_file + '_l1.out')
+        write_to_file(pred_index_l2, opts.out_file + '_l2.out')
+        write_to_file(pred_index_cosine, opts.out_file + '_cosine.out')
+    else:
+        pred_index_random = []
+        for i in xrange(0, len(value_img_test)):
+            results = [j for j in range(len(value_sen_test))]
+            shuffle(results)
+            pred_index_random.append(results.index(i))
+            
+        write_to_file(pred_index_random, opts.out_file + '.out')
 
 if __name__ == "__main__":
     main()
