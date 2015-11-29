@@ -15,9 +15,9 @@ LDFLAGS = -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -l
 
 SW_LDFLAGS = -shared 
 
-INCLUDES = -I'/usr/include/opencv' -I'/usr/include/python2.7'
+INCLUDES = -I'/usr/include/opencv' -I'/usr/include/python2.7' -I'/usr/include'
 
-LIB_INCLUDES = -L'/usr/lib/python2.7/config'
+LIB_INCLUDES = -L'/usr/lib/python2.7/config' -L'/usr/lib'
 
 all: _images.so
 
@@ -31,8 +31,8 @@ images.o: images.cpp
 		$(CPP) $(CPP_FLAGS) $(INCLUDES) $(LIB_INCLUDES) $(LDFLAGS) $(SW_LDFLAGS) $< -o $@
 
 _images.so: $(OBJECTS)
-		$(CPP) $(SW_LDFLAGS) $^ -o $@
+		$(CPP) $(SW_LDFLAGS) $(LDFLAGS) $^ -o $@
 
 
 clean:
-		rm -f *.o *.cxx *.pyc *.so images.py *.gch
+		rm -f *.o *.cxx *.pyc *.so images.py *.gch *.yml *.pkl *.npy *.out
