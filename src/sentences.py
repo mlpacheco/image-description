@@ -76,7 +76,7 @@ def extract_lda(sentences, k, path):
 def train_bow(sentences, path):
     ## use of TF-IDF normalization for BOW
     tfidf_filename = join(path, BOW_FILENAME)
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
     vectorizer.fit(sentences)
     joblib.dump(vectorizer, tfidf_filename)
 
