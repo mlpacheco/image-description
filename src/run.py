@@ -275,13 +275,13 @@ def main():
 
     value_sen_train, value_img_train = re_index(train_sen, train_img)
     value_sen_test, value_img_test = re_index(test_sen, test_img)
-    value_sen_test = value_sen_test[:20]
-    value_img_test = value_img_test[:20]
+    value_sen_test = value_sen_test
+    value_img_test = value_img_test
     if not opts.random:
 
         #sentences.train_lda(value_sen, 10, opts.out_sentence)
         sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
-        images.trainSift(images.PathSet(value_img_train), 5, opts.out_image, opts.out_file)
+        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
         print "Training features complete"
 
         #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
