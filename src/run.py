@@ -276,16 +276,16 @@ def main():
     if not opts.random:
 
         #sentences.train_lda(value_sen, 10, opts.out_sentence)
-        sentences.train_bow(value_sen_train, opts.out_sentence)
-        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image)
+        sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
+        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
         print "Training features complete"
 
         #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
-        train_sen_feat = sentences.extract_bow(value_sen_train, opts.out_sentence).toarray()
+        train_sen_feat = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file).toarray()
 
         train_img_feat = images.FeaturesMatrix()
         bad_image_indexes = images.BadIndexes()
-        images.extractFeats(opts.out_image, images.PathSet(value_img_train), train_img_feat, bad_image_indexes)
+        images.extractFeats(opts.out_image, images.PathSet(value_img_train), train_img_feat, bad_image_indexes, opts.out_file)
         train_img_feat = np.asarray(train_img_feat)
         train_sen_feat = np.delete(train_sen_feat, tuple(bad_image_indexes), axis=0)
 
@@ -293,7 +293,7 @@ def main():
         print "Sentences: ", train_sen_feat.shape
         print "Images: ", train_img_feat.shape
 
-        cca = CCA(n_components=128)
+        cca = CCA(n_components=35)
         cca.fit(train_sen_feat, train_img_feat)
         #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
         #cca.train([train_sen_feat, train_img_feat])
@@ -301,10 +301,10 @@ def main():
         print "CCA done"
         print cca
 
-        test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence).toarray()
+        test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence, opts.out_file).toarray()
         test_img_feat = images.FeaturesMatrix()
         bad_image_indexes = images.BadIndexes()
-        images.extractFeats(opts.out_image, images.PathSet(value_img_test), test_img_feat, bad_image_indexes)
+        images.extractFeats(opts.out_image, images.PathSet(value_img_test), test_img_feat, bad_image_indexes, opts.out_file)
         test_img_feat = np.asarray(test_img_feat)
         print "test_sen_feat", test_sen_feat.shape
         print "test_img_feat", test_img_feat.shape
@@ -362,7 +362,9 @@ def main():
             results = [j for j in range(len(value_sen_test))]
             shuffle(results)
             pred_index_random.append(results.index(i))
-
+        print "\nRandom stats"
+        print_stats(pred_index_random)
+        print
         write_to_file(pred_index_random, opts.out_file + '.out')
 
 if __name__ == "__main__":
