@@ -25,4 +25,3 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
 // Extraction and Similarity Interfaces
 int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages, string outFile);
 //double similarityScore(string image1Path, string image2Path, string trainedPath);
-

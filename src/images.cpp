@@ -133,10 +133,10 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
     Mat bowDescriptor;
     Mat img;
     vector<KeyPoint> keypoints;
-    
+
     double total = imagePaths.size();
     cout << "extracting " << total << " images." << endl;
-    
+
     for (int i = 0; i < total; i++) {
         img = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         detector->detect(img, keypoints);
@@ -144,8 +144,8 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
         histograms.push_back(bowDescriptor);
         cout << i*100/total << "%";
         cout.flush();
-        cout << '\r'; 
-        
+        cout << '\r';
+
         if (i + a != histograms.rows) {
             a--;
             problematicImages.push_back(i);
@@ -170,7 +170,6 @@ int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<fl
     Mat2vector(SIFTfeatures, extractedFeats);
     return 1;
 }
-
 
 // right now it only measures SIFT but it needs other features next
 // on stand by

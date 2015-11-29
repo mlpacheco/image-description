@@ -9,9 +9,11 @@ import sentences
 import images
 
 # algorithms
-from sklearn.cross_decomposition import CCA
-import rcca
-from sklearn.metrics.pairwise import pairwise_distances
+#from sklearn.cross_decomposition import CCA
+#import rcca
+from PyKCCA. kernels import BowKernel, HistKernel
+from PyKCCA import KCCA
+from sklearn.metrics.pairwise import cosine_similarity
 
 ### GENERAL ###
 def get_last_sentence(f_name):
@@ -273,11 +275,13 @@ def main():
 
     value_sen_train, value_img_train = re_index(train_sen, train_img)
     value_sen_test, value_img_test = re_index(test_sen, test_img)
+    value_sen_test = value_sen_test[:20]
+    value_img_test = value_img_test[:20]
     if not opts.random:
 
         #sentences.train_lda(value_sen, 10, opts.out_sentence)
         sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
-        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
+        images.trainSift(images.PathSet(value_img_train), 5, opts.out_image, opts.out_file)
         print "Training features complete"
 
         #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
@@ -293,13 +297,26 @@ def main():
         print "Sentences: ", train_sen_feat.shape
         print "Images: ", train_img_feat.shape
 
-        cca = CCA(n_components=35)
-        cca.fit(train_sen_feat, train_img_feat)
+        #cca = CCA(n_components=35)
+        #cca.fit(train_sen_feat, train_img_feat)
         #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
         #cca.train([train_sen_feat, train_img_feat])
 
-        print "CCA done"
-        print cca
+        #print "CCA done"
+        #print cca
+
+        kernel_sen = BowKernel()
+        kernel_img = HistKernel()
+        cca = KCCA(kernel_sen, kernel_img,
+                   regularization=1e-5,
+                   decomp='full',
+                   method='kettering_method',
+                   scaler1=lambda x:x,
+                   scaler2=lambda x:x).fit(train_sen_feat,train_img_feat)
+
+        print "Ftting done",  cca.beta_
+
+
 
         test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence, opts.out_file).toarray()
         test_img_feat = images.FeaturesMatrix()
@@ -328,34 +345,18 @@ def main():
             l1 = []; l2 = []; cosine = [];
             for j in xrange(0, len(test_sen_c)):
                 Y = test_img_c[j]
+                cosine.append((cosine_similarity(X.reshape(1, -1), Y.reshape(1, -1))[0][0], j))
 
-                l1.append((pairwise_distances(X, Y, metric='l1')[0][0], j))
-                l2.append((pairwise_distances(X, Y, metric='l2')[0][0], j))
-                cosine.append((pairwise_distances(X, Y, metric='cosine')[0][0], j))
-
-            l1.sort()
-            l2.sort()
             cosine.sort(reverse=1)
-
-            l1_all[i] = [index for (metric,index) in l1]
-            l2_all[i] = [index for (metric,index) in l2]
+            #print cosine
             cosine_all[i] = [index for (metric,index) in cosine]
-
-            pred_index_l1.append(l1_all[i].index(i))
-            pred_index_l2.append(l2_all[i].index(i))
             pred_index_cosine.append(cosine_all[i].index(i))
 
-        print "\nL1 stats"
-        print_stats(pred_index_l1)
-        print "\nL2 stats"
-        print_stats(pred_index_l2)
-        print "\nL3 stats"
+        print "\nStats"
         print_stats(pred_index_cosine)
         print
-
-        write_to_file(pred_index_l1, opts.out_file + '_l1.out')
-        write_to_file(pred_index_l2, opts.out_file + '_l2.out')
         write_to_file(pred_index_cosine, opts.out_file + '_cosine.out')
+
     else:
         pred_index_random = []
         for i in xrange(0, len(value_img_test)):
