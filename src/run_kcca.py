@@ -48,7 +48,7 @@ def parse_datasets(opts):
 
     value_sen_train, value_img_train = re_index(train_sen, train_img)
     value_sen_test, value_img_test = re_index(test_sen, test_img)
-    return value_sen_train, value_img_train, value_sen_test[:10], value_img_test[:10]
+    return value_sen_train, value_img_train, value_sen_test, value_img_test
 
 def write_to_file(scores, filename):
     with open(filename, 'w') as fw:
