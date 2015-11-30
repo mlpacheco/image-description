@@ -23,8 +23,4 @@ int extractFeats(std::string trainedPath,
                  std::vector<std::vector<float> > &extractedFeats,
                  std::vector<int> &problematicImages, std::string outFile);
 
-/*double similarityScore(std::string image1Path,
-                       std::string image2Path,
-                       std::string trainedPath);*/
-
-
+double intersectionScore(std::vector<float> histogram1, std::vector<float> histogram2);

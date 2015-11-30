@@ -135,7 +135,7 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
     vector<KeyPoint> keypoints;
 
     double total = imagePaths.size();
-    cout << "extracting " << total << " images." << endl;
+    //cout << "extracting " << total << " images." << endl;
 
     for (int i = 0; i < total; i++) {
         img = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
@@ -171,64 +171,8 @@ int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<fl
     return 1;
 }
 
-// right now it only measures SIFT but it needs other features next
-// on stand by
-/*double similarityScore(string image1Path, string image2Path, string trainedPath) {
-    Mat histogram1;
-    Mat histogram2;
-    vector<string> imagePaths;
-
-    // images need to be passed as an array
-    imagePaths.push_back(image1Path);
-    extractSiftBOW(trainedPath, imagePaths, histogram1);
-
-    imagePaths.pop_back();
-    imagePaths.push_back(image2Path);
-    extractSiftBOW(trainedPath, imagePaths, histogram2);
-
+double intersectionScore(vector<float> histogram1, vector<float> histogram2) {
     return compareHist(histogram1, histogram2, CV_COMP_INTERSECT);
-}*/
+}
 
 
-
-
-/*int main(int argc, char *argv[]) {
-
-    // test sift training
-    string path = "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/data/AbstractScenes/RenderedScenes/";
-    string filename;
-    vector<string> trainImagePaths;
-
-    for(int i = 0; i < 10; i++) {
-        stringstream ss;
-        ss << i;
-        filename = path + "Scene0_" + ss.str() + ".png";
-        trainImagePaths.push_back(filename);
-    }
-
-    cout << "imagePaths " << trainImagePaths.size() << endl;
-
-    string trainedFile =  "/Users/marialeonor/Purdue/MachineLearning/Repositories/image-description/out/images/";
-    trainSift(trainImagePaths, 5, trainedFile);
-
-    // test sift extraction
-    vector<string> testImagePaths;
-    Mat extractedFeats;
-    for(int i = 0; i < 10; i++) {
-        stringstream ss;
-        ss << i;
-        filename = path + "Scene1_" + ss.str() + ".png";
-        testImagePaths.push_back(filename);
-    }
-
-    extractSiftBOW(trainedFile, testImagePaths, extractedFeats);
-    printContents(extractedFeats);
-
-    cout << endl << endl;
-    vector<vector<float> > vectFeats;
-    Mat2vector(extractedFeats, vectFeats);
-    printVector(vectFeats);
-
-
-
-}*/

@@ -2,7 +2,7 @@ from math import log
 #from gensim import corpora, models
 from os.path import join
 from sklearn.externals import joblib
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.feature_selection import VarianceThreshold
 import numpy as np
 

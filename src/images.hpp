@@ -22,6 +22,6 @@ int printContents(Mat BOWmat);
 int trainSift(vector<String> imagePaths, int numWords, string trainedPath, string outFile);
 int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, vector<int> &problematicImages, string outFile);
 
-// Extraction and Similarity Interfaces
+// Extraction Interfaces
 int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages, string outFile);
-//double similarityScore(string image1Path, string image2Path, string trainedPath);
+double intersectionScore(vector<float> histogram1, vector<float> histogram2);
