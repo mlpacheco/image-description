@@ -1,0 +1,131 @@
+/////////////////////////
+//// COCO CATEGORIES ////
+/////////////////////////
+person
+bicycle
+car
+motorcycle
+bird
+cat
+dog
+horse
+sheep
+bottle
+chair
+couch
+potted plant
+tv
+cow
+airplane
+bed
+laptop
+microwave
+sink
+oven
+toaster
+bus
+train
+dining table
+elephant
+banana
+toilet
+book
+boat
+cell phone
+mouse
+remote
+clock
+apple
+keyboard
+backpack
+wine glass
+zebra
+scissors
+truck
+traffic light
+cup
+hair drier
+umbrella
+fire hydrant
+bowl
+fork
+knife
+spoon
+bear
+refrigerator
+pizza
+frisbee
+teddy bear
+tie
+stop sign
+surfboard
+sandwich
+kite
+orange
+toothbrush
+sports ball
+broccoli
+suitcase
+carrot
+parking meter
+handbag
+hot dog
+donut
+vase
+baseball bat
+baseball glove
+giraffe
+skis
+snowboard
+skateboard
+tennis racket
+cake
+bench
+
+
+/////////////////////////
+/ MICROSOFT CATEGORIES //
+/////////////////////////
+*person
+*airplane(airships)
+*hot air baloon
+*trees
+*bear
+*bird
+*cat
+*dog
+snake
+*duck
+tent
+(camping)
+sandbox
+fire
+bench
+swings
+grill
+*hats
+*cake(pie)
+drinks
+*hot-dog
+*pizza
+burguer
+*cup(soda)
+sause
+*rocket
+hellicopter
+*toys(shovel, bucket)
+*eyeglasses
+*baseball bat
+*baseball glove
+*kite
+*balloon
+*tennis racket
+*frisbee
+*sports ball
+
+
+
+
+
+
+
