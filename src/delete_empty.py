@@ -31,26 +31,31 @@ def get_null_images(img_path, range_init, colors):
             null_files.append(f)
     return null_files
 
-def generate_deleted_sentences(null_files):
+def generate_deleted_sentences(domain, null_files):
     filename1 = "SimpleSentences1_10020.txt"
     filename2 = "SimpleSentences2_10020.txt"
-    new_filename
+    null_ids = [map(int, s.split('.')[0][5:].split('_')) for s in null_files]
+    null_ids = [i[0]*10 + i[1] for i in null_ids]
+    deleted_count = 0
     for filename in [filename1, filename2]:
         new_filename = join(domain, "new" + filename)
         filename = join(domain, filename)
-        with open(filename) as f:
+        with open(filename) as f, open(new_filename, 'w+') as fn:
             f = f.readlines()
             for s in f:
-
-        for f in null_files
-            map(int, s.split('.')[0][5:].split('_'))
-
-def move_null_images():
-    pass
+                sen = s.strip().split("\t", 2)
+                index = int(sen[0])
+                if index not in null_ids:
+                    fn.write(s)
+                else:
+                    deleted_count += 1
+    return deleted_count
 
 def main():
     opts = parse_args()
-    get_null_images(opts.img_path, 191, [84, 163,  89])
+    null_files = get_null_images(opts.img_path, 191, [84, 163,  89])
+    deleted_count = generate_deleted_sentences(opts.sentence_path, null_files)
+    print 'Deleted:', deleted_count, 'sentences'
 
 if __name__ == "__main__":
     main()
