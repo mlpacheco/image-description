@@ -219,6 +219,14 @@ def re_index(dictionary_sen, dictionary_img):
         index += 1
     return value_sen, value_img
 
+def print_stats(rank):
+    rank = np.asarray(rank)
+    print "Min: ", np.min(rank)
+    print "Avg: ", np.mean(rank)
+    print "Std: ", np.std(rank)
+    #print "Var: ", np.var(rank)
+    print "Max: ", np.max(rank)
+
 ### MAIN ###
 def main():
     parser = optparse.OptionParser()
@@ -265,19 +273,19 @@ def main():
 
     value_sen_train, value_img_train = re_index(train_sen, train_img)
     value_sen_test, value_img_test = re_index(test_sen, test_img)
-    if not opts.random:    
+    if not opts.random:
 
         #sentences.train_lda(value_sen, 10, opts.out_sentence)
-        sentences.train_bow(value_sen_train, opts.out_sentence)
-        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image)
+        sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
+        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
         print "Training features complete"
 
         #train_sen_feat = sentences.extract_lda(value_sen, 10, opts.out_sentence)
-        train_sen_feat = sentences.extract_bow(value_sen_train, opts.out_sentence).toarray()
+        train_sen_feat = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file).toarray()
 
         train_img_feat = images.FeaturesMatrix()
         bad_image_indexes = images.BadIndexes()
-        images.extractFeats(opts.out_image, images.PathSet(value_img_train), train_img_feat, bad_image_indexes)
+        images.extractFeats(opts.out_image, images.PathSet(value_img_train), train_img_feat, bad_image_indexes, opts.out_file)
         train_img_feat = np.asarray(train_img_feat)
         train_sen_feat = np.delete(train_sen_feat, tuple(bad_image_indexes), axis=0)
 
@@ -285,28 +293,28 @@ def main():
         print "Sentences: ", train_sen_feat.shape
         print "Images: ", train_img_feat.shape
 
-        cca = CCA(n_components=9)
+        cca = CCA(n_components=35)
         cca.fit(train_sen_feat, train_img_feat)
         #cca = rcca.CCA(kernelcca=False, numCC=2, reg=0.)
         #cca.train([train_sen_feat, train_img_feat])
 
         print "CCA done"
         print cca
-        
-        test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence).toarray()
+
+        test_sen_feat = sentences.extract_bow(value_sen_test, opts.out_sentence, opts.out_file).toarray()
         test_img_feat = images.FeaturesMatrix()
         bad_image_indexes = images.BadIndexes()
-        images.extractFeats(opts.out_image, images.PathSet(value_img_test), test_img_feat, bad_image_indexes)
+        images.extractFeats(opts.out_image, images.PathSet(value_img_test), test_img_feat, bad_image_indexes, opts.out_file)
         test_img_feat = np.asarray(test_img_feat)
         print "test_sen_feat", test_sen_feat.shape
         print "test_img_feat", test_img_feat.shape
-        
+
         test_sen_c, test_img_c = cca.transform(test_sen_feat, test_img_feat)
         print "test_sen_cca", test_sen_c.shape
         print "test_img_cca", test_img_c.shape
         #ev = cca.compute_ev([test_sen_feat, test_img_feat])
         #print ev
-        
+
         print "Testing set after transformation"
         print "Sentences: ", test_sen_c.shape
         print "Images: ", test_img_c.shape
@@ -336,7 +344,14 @@ def main():
             pred_index_l1.append(l1_all[i].index(i))
             pred_index_l2.append(l2_all[i].index(i))
             pred_index_cosine.append(cosine_all[i].index(i))
-        
+
+        print "\nL1 stats"
+        print_stats(pred_index_l1)
+        print "\nL2 stats"
+        print_stats(pred_index_l2)
+        print "\nL3 stats"
+        print_stats(pred_index_cosine)
+        print
 
         write_to_file(pred_index_l1, opts.out_file + '_l1.out')
         write_to_file(pred_index_l2, opts.out_file + '_l2.out')
@@ -347,7 +362,9 @@ def main():
             results = [j for j in range(len(value_sen_test))]
             shuffle(results)
             pred_index_random.append(results.index(i))
-            
+        print "\nRandom stats"
+        print_stats(pred_index_random)
+        print
         write_to_file(pred_index_random, opts.out_file + '.out')
 
 if __name__ == "__main__":

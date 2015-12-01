@@ -37,9 +37,9 @@ def common_words(s1, s2):
     return list(words)
 
 # k: number of topics to extract
-def train_lda(sentences, k, path):
-    dict_filename = join(path, DICT_FILENAME)
-    model_filename = join(path, LDA_FILENAME)
+def train_lda(sentences, k, path, out_file):
+    dict_filename = join(path, out_file + "_dict.txt")
+    model_filename = join(path, out_file + "_lda.pkl")
     documents = [x.split() for x in sentences]
     dictionary = corpora.Dictionary(documents)
     # filter extremes?
@@ -55,9 +55,9 @@ def train_lda(sentences, k, path):
     dictionary.save_as_text(dict_filename)
     model.save(model_filename)
 
-def extract_lda(sentences, k, path):
-    dict_filename = join(path, DICT_FILENAME)
-    model_filename = join(path, LDA_FILENAME)
+def extract_lda(sentences, k, path, out_file):
+    dict_filename = join(path, out_file + "_dict.txt")
+    model_filename = join(path, out_file + "_lda.pkl")
     dictionary = corpora.Dictionary.load_from_text(dict_filename)
     model = models.LdaModel.load(model_filename)
 
@@ -73,14 +73,14 @@ def extract_lda(sentences, k, path):
     return np.asarray(ret)
 
 
-def train_bow(sentences, path):
+def train_bow(sentences, path, out_file):
     ## use of TF-IDF normalization for BOW
-    tfidf_filename = join(path, BOW_FILENAME)
-    vectorizer = TfidfVectorizer()
+    tfidf_filename = join(path, out_file + "_bow.pkl")
+    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01)
     vectorizer.fit(sentences)
     joblib.dump(vectorizer, tfidf_filename)
 
-def extract_bow(sentences, path):
-    tfidf_filename = join(path, BOW_FILENAME)
+def extract_bow(sentences, path, out_file):
+    tfidf_filename = join(path, out_file + "_bow.pkl")
     vectorizer = joblib.load(tfidf_filename)
     return vectorizer.transform(sentences)
