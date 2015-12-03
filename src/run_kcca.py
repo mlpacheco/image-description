@@ -110,7 +110,8 @@ def main():
 
         print "TRAINING FEATURES ##############"
         sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
-        images.trainSift(images.PathSet(value_img_train), 5, opts.out_image, opts.out_file)
+        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
+        images.trainCielab(images.PathSet(value_img_train), 128, opts.out_image, opts.out_file)
         print "Done."
 
         kernel_sen = BowKernel()

@@ -18,9 +18,14 @@ int trainSift(std::vector<std::string> imagePaths,
               int numWords,
               std::string trainedPath, std::string outFile);
 
+int trainCielab(std::vector<std::string> imagePaths,
+                int numWords,
+                std::string trainedPath, std::string outFile);
+
 int extractFeats(std::string trainedPath,
                  std::vector<std::string> imagePaths,
-                 std::vector<std::vector<float> > &extractedFeats,
-                 std::vector<int> &problematicImages, std::string outFile);
+                 std::vector<std::vector<float> > &SiftFeats,
+                 std::vector<std::vector<float> > &CielabFeats,
+                 std::string outFile);
 
 double intersectionScore(std::vector<float> histogram1, std::vector<float> histogram2);

@@ -43,6 +43,7 @@ string type2str(int type) {
 }
 
 int printContents(Mat BOWmat) {
+    //cout << "Rows: " << BOWmat.rows << " Cols: " << BOWmat.cols << endl;
     for (int i = 0; i < BOWmat.rows; i++) {
         for (int j = 0; j < BOWmat.cols; j++) {
             cout << BOWmat.at<float>(i,j) << " ";
@@ -84,14 +85,17 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath, strin
     Mat descriptor; 
     Mat featuresUnclustered;
     SiftDescriptorExtractor detector;
+    Size size(100,100);
+    Mat dst;
 
     string outfile = joinPath(trainedPath, outFile + "_sift.yml");
     double total = imagePaths.size();
     cout << "training " << total << " images." << endl;
     for (int i = 0; i < total; i++) {
         input = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
-        detector.detect(input, keypoints);
-        detector.compute(input, keypoints, descriptor);
+        resize(input, dst, size);
+        detector.detect(dst, keypoints);
+        detector.compute(dst, keypoints, descriptor);
         featuresUnclustered.push_back(descriptor);
         cout << i*100/total << "%";
         cout.flush();
@@ -114,9 +118,51 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath, strin
     return 1;
 }
 
+int trainCielab(vector<String> imagePaths, int numWords, string trainedPath, string outFile) {
+    Mat imgRgb;
+    Mat imgLab;
+    Mat featuresUnclustered;
+    Size size(100,100);
+    Mat resizedImg;
+    Mat typeImg;
+    string outfile = joinPath(trainedPath, outFile + "_cielab.yml");
+    double total = imagePaths.size();
+    for (int i = 0; i < total; i++) {
+        // read RGB image
+        imgRgb = imread(imagePaths[i]);
+        // resize image
+        resize(imgRgb, imgRgb, size);
+        // transform to CIELAB
+        cvtColor(imgRgb, imgLab, CV_BGR2Lab);
+        // transform to float for kmeans
+        imgLab.convertTo(typeImg, CV_32F);
+        // make it a list of pixels
+        typeImg = typeImg.reshape(3, typeImg.rows * typeImg.cols);
+        // push features
+        featuresUnclustered.push_back(typeImg);
+        cout << i*100/total << "%";
+        cout.flush();
+        cout << "\r";
+    }
 
-int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, vector<int> &problematicImages, string outFile) {
-    int a = 1;
+    // train k-means
+    Mat centers;
+    Mat labels;
+    TermCriteria tc(CV_TERMCRIT_ITER, 100, 0.001);
+    kmeans(featuresUnclustered, numWords, labels, tc, 1, KMEANS_PP_CENTERS, centers);
+
+    FileStorage fs(outfile, FileStorage::WRITE);
+    fs << "centers" << centers;
+    fs.release();
+
+    printContents(centers);
+
+    return 1;
+
+}
+
+
+int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, string outFile) {
     Mat dictionary;
 
     string trainedFile = joinPath(trainedPath, outFile + "_sift.yml");
@@ -146,10 +192,6 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
         cout.flush();
         cout << '\r';
 
-        if (i + a != histograms.rows) {
-            a--;
-            problematicImages.push_back(i);
-        }
     }
 
     // printing out the contents of the Mat and its properties
@@ -162,12 +204,81 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
 
 }
 
+int encodeKmeansBOW(Mat pixels, Mat centers, vector<float> &BOWfeatures) {
+    vector<float> counts (centers.rows,0);
+    Mat pixel;
+    for (int i = 0; i < pixels.rows; i++) {
+        double best_distance = 0.0;
+        int best_center = -1;
+        pixel = pixels.row(i).reshape(1);
+        for (int j = 0; j < centers.rows; j++) {
+            double dist = norm(pixel, centers.row(j));
+            if (dist > best_distance) {
+                best_distance = dist;
+                best_center = j;
+            }
+        }
+        counts[best_center] += 1;
+    }
+
+    /*for (int i = 0; i < counts.size(); i++) {
+        cout << counts[i] << " ";
+    }
+    cout << endl;*/
+
+    for (int i = 0; i < counts.size(); i++) {
+        BOWfeatures.push_back(counts[i]/pixels.rows);
+    }
+    return 1;
+}
+
+int extractCielabBOW(string trainedPath, vector<string> imagePaths, vector<vector<float> > &histograms, string outFile) {
+    Mat centers;
+
+    string trainedFile = joinPath(trainedPath, outFile + "_cielab.yml");
+    FileStorage fs(trainedFile, FileStorage::READ);
+    fs["centers"] >> centers;
+    fs.release();
+
+    Mat imgRgb;
+    Mat imgLab;
+    Size size(100,100);
+    Mat typeImg;
+
+    double total = imagePaths.size();
+    for (int i = 0; i < total; i++) {
+        imgRgb = imread(imagePaths[i]);
+        // resizing image
+        resize(imgRgb, imgRgb, size);
+        // translating to cielab coordinates
+        cvtColor(imgRgb, imgLab, CV_BGR2Lab);
+        // changing type for kmeans
+        imgLab.convertTo(typeImg, CV_32F);
+        // reshaping to have a list of pixels
+        typeImg = typeImg.reshape(3, typeImg.rows * typeImg.cols);
+        // extracting features for image
+        vector<float> features;
+        encodeKmeansBOW(typeImg, centers, features);
+        histograms.push_back(features);
+        cout << i*100/total << "%";
+        cout.flush();
+        cout << '\r';
+
+    }
+
+    return 1;
+
+}
+
 /* Extracted Feats in vector for SWIG */
 
-int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages, string outFile) {
-    Mat SIFTfeatures;
-    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures, problematicImages, outFile);
-    Mat2vector(SIFTfeatures, extractedFeats);
+int extractFeats(string trainedPath, vector<string> imagePaths,
+                 vector<vector<float> > &SiftFeats, vector<vector<float> > &CielabFeats,
+                 string outFile) {
+    Mat SIFTfeatMat;
+    extractSiftBOW(trainedPath, imagePaths, SIFTfeatMat, outFile);
+    Mat2vector(SIFTfeatMat, SiftFeats);
+    extractCielabBOW(trainedPath, imagePaths, CielabFeats, outFile);
     return 1;
 }
 
@@ -176,3 +287,30 @@ double intersectionScore(vector<float> histogram1, vector<float> histogram2) {
 }
 
 
+int main(int argc, char *argv[]) {
+    string path = "/Users/marialeonor/Developer/image-description/data/AbstractScenes_v1.1/RenderedScenes/";
+    string filename;
+    vector<string> trainImagePaths;
+
+    for (int i = 0; i < 10; i++) {
+        stringstream ss;
+        ss << i;
+        filename = path + "Scene0_" + ss.str() + ".png";
+        trainImagePaths.push_back(filename);
+    }
+
+    trainCielab(trainImagePaths, 5, ".", "TEST");
+    cout << "Trained!" << endl;
+    vector<vector<float> > CielabHistograms;
+    extractCielabBOW(".", trainImagePaths, CielabHistograms, "TEST");
+    printVector(CielabHistograms);
+    //Mat histograms;
+    //trainSift(trainImagePaths, 5, ".", "TEST");
+    //extractSiftBOW(".", trainImagePaths, histograms, problematicImages, "TEST");
+    //printContents(histograms);
+
+
+
+    return 1;
+
+}
