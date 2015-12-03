@@ -155,7 +155,7 @@ int trainCielab(vector<String> imagePaths, int numWords, string trainedPath, str
     fs << "centers" << centers;
     fs.release();
 
-    printContents(centers);
+    //printContents(centers);
 
     return 1;
 

@@ -1,33 +1,55 @@
+import re
+
 import numpy
 from sklearn.metrics.pairwise import cosine_similarity
 
 import images
 
 
-class BowKernel(object):
+class DomainAdaptation(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, domain_adapt):
+        self.domain_adapt = domain_adapt
+
+    def same_image_domain(self, path1, path2):
+        if (re.match(r'.*RenderedScenes.*', path1) and
+            re.match(r'.*RenderedScenes.*', path2)):
+            return True
+        elif (re.match(r'.*flickr30k-images.*', path1) and
+              re.match(r'.*flickr30k-images.*', path2)):
+            return True
+        else:
+            return False
+
+    def same_sentence_domain(self, domain1, domain2):
+        return domain1 == domain2
+
+
+class BowKernel(DomainAdaptation):
+
+    def __init__(self, domain_adapt=False):
+        super(BowKernel, self).__init__(domain_adapt)
 
     def __call__(self, X1, X2):
-        """ receives X1 and X2 tf-idf matrix """
-        if X1.shape[1] != X2.shape[1]:
-            raise ValueError("Invalid matrix dimensions: " + str(X1.shape) + " " + str(X2.shape))
-
+        """ receives as X1 and X2 a list of tuples (tfidf-vector, domain_index) """
         m = []
-        for x1 in X1:
+        for (x1,domain1) in X1:
             ret = []
-            for x2 in X2:
+            for (x2,domain2) in X2:
                 sim = cosine_similarity(x1.reshape(1, -1), x2.reshape(1, -1))[0][0]
-                ret.append(sim)
+                if self.domain_adapt and self.same_sentence_domain(domain1, domain2):
+                    ret.append(2*sim)
+                else:
+                    ret.append(sim)
             m.append(ret)
         m = numpy.asarray(m)
         print m.shape
         return m
 
-class HistKernel(object):
+class HistKernel(DomainAdaptation):
 
-    def __init__(self, trained_path, out_file):
+    def __init__(self, trained_path, out_file, domain_adapt=False):
+        super(HistKernel, self).__init__(domain_adapt)
         self.trained_path = trained_path
         self.out_file = out_file
 
@@ -49,21 +71,25 @@ class HistKernel(object):
             X2_cielab = X1_cielab
 
         m = []
-        for x1s,x1c in zip(X1_sift,X1_cielab):
+        for x1s,x1c,x1 in zip(X1_sift,X1_cielab, X1):
             ret = []
-            for x2s,x2c in zip(X2_sift, X2_cielab):
+            for x2s,x2c,x2 in zip(X2_sift, X2_cielab, X2):
                 inter_sift = images.intersectionScore(x1s, x2s)
                 inter_cielab = images.intersectionScore(x1c, x2c)
-                ret.append((inter_sift+inter_cielab)/2.0)
+                sim = (inter_sift+inter_cielab)/2.0
+                if self.domain_adapt and self.same_image_domain(x1, x2):
+                    ret.append(2*sim)
+                else:
+                    ret.append(sim)
             m.append(ret)
         m = numpy.asarray(m)
         print m.shape
         return m
 
-def PyramidKernel(object):
+def PyramidKernel(DomainAdaptation):
 
-    def __init__(self):
-        pass
+    def __init__(self, domain_adapt):
+        super(PyramidKernel, self).__init__(domain_adapt)
 
     def __call__(self, X1, X2):
         pass

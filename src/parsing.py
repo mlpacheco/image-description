@@ -58,9 +58,9 @@ def parse_microsoft_sentences(domain, train_ids, val_ids, test_ids):
                     continue
 
                 if index in sentences:
-                    sentences[index] += " " + s[2]
+                    sentences[index][0] += " " + s[2]
                 else:
-                    sentences[index] = s[2]
+                    sentences[index] = [s[2],0]
     return train_data, val_data, test_data
 
 def parse_microsoft_images(domain, train_ids, val_ids, test_ids):
@@ -126,9 +126,9 @@ def parse_flickr30k_sentences(domain, train_index, val_index):
                 continue
 
             if image_index in sentences:
-                sentences[image_index] += " " + s
+                sentences[image_index][0] += " " + s
             else:
-                sentences[image_index] = s
+                sentences[image_index] = [s, 1]
             prev_image_index = image_index
 
     # Process data for testing
@@ -142,9 +142,9 @@ def parse_flickr30k_sentences(domain, train_index, val_index):
             if prev_image_index and prev_image_index!=image_index:
                 index +=1
             if image_index in test_data:
-                test_data[image_index] += " " + s
+                test_data[image_index][0] += " " + s
             else:
-                test_data[image_index] = s
+                test_data[image_index] = [s, 1]
             prev_image_index = image_index
     return train_data, val_data, test_data
 
