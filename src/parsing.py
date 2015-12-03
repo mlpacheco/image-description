@@ -29,7 +29,7 @@ def get_splits(total, train_ratio, val_ratio):
 
 ### MICROSOFT ###
 def get_split_ids_microsoft(domain, num_train, num_val, num_test):
-    filename = os.path.join(domain, "SimpleSentences", "SimpleSentences1_10020.txt")
+    filename = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020.txt")
     last_sentence  = get_last_sentence(filename)
     total_image_num = int(last_sentence.split()[0]) + 1
     ids = [i for i in xrange(0, total_image_num)]
@@ -39,8 +39,8 @@ def get_split_ids_microsoft(domain, num_train, num_val, num_test):
            set(ids[num_train+num_val:num_train+num_val+num_test])
 
 def parse_microsoft_sentences(domain, train_ids, val_ids, test_ids):
-    filename1 = os.path.join(domain, "SimpleSentences", "SimpleSentences1_10020.txt")
-    filename2 = os.path.join(domain, "SimpleSentences", "SimpleSentences2_10020.txt")
+    filename1 = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020.txt")
+    filename2 = os.path.join(domain, "SimpleSentences", "newSimpleSentences2_10020.txt")
     train_data = {}; val_data = {}; test_data = {}
     for filename in [filename1, filename2]:
         with open(filename) as f:
