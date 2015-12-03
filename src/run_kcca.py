@@ -27,8 +27,8 @@ def parse_input():
     parser.add_option('-m', '--microsoft', help='number of training examples of source domain',\
                       dest='num_microsoft_train', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
-    parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true')
-    parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true')
+    parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
+    parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
     (opts, args) = parser.parse_args()
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
     for m in mandatories:
