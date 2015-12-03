@@ -78,14 +78,14 @@ string joinPath(string path, string fileName) {
 /* SIFT Functions */
 
 
-int trainSift(vector<String> imagePaths, int numWords, string trainedPath, string outFile) {
+int trainSift(vector<String> imagePaths, int numWords, string trainedPath) {
     Mat input;
     vector<KeyPoint> keypoints;
     Mat descriptor; 
     Mat featuresUnclustered;
     SiftDescriptorExtractor detector;
 
-    string outfile = joinPath(trainedPath, outFile + "_sift.yml");
+    string outfile = joinPath(trainedPath, SIFT_FILENAME);
     double total = imagePaths.size();
     cout << "training " << total << " images." << endl;
     for (int i = 0; i < total; i++) {
@@ -115,11 +115,11 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath, strin
 }
 
 
-int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, vector<int> &problematicImages, string outFile) {
+int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histograms, vector<int> &problematicImages) {
     int a = 1;
     Mat dictionary;
 
-    string trainedFile = joinPath(trainedPath, outFile + "_sift.yml");
+    string trainedFile = joinPath(trainedPath, SIFT_FILENAME);
 
     FileStorage fs(trainedFile, FileStorage::READ);
     fs["vocabulary"] >> dictionary;
@@ -164,9 +164,9 @@ int extractSiftBOW(string trainedPath, vector<string> imagePaths, Mat &histogram
 
 /* Extracted Feats in vector for SWIG */
 
-int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages, string outFile) {
+int extractFeats(string trainedPath, vector<string> imagePaths, vector<vector<float> > &extractedFeats, vector<int> &problematicImages) {
     Mat SIFTfeatures;
-    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures, problematicImages, outFile);
+    extractSiftBOW(trainedPath, imagePaths, SIFTfeatures, problematicImages);
     Mat2vector(SIFTfeatures, extractedFeats);
     return 1;
 }
