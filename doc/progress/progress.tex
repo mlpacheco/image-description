@@ -24,7 +24,7 @@
 \usepackage{indentfirst}
 \usepackage[colorlinks, linkcolor=red, anchorcolor=purple, citecolor=blue]{hyperref}
 \usepackage{hyperref}
-
+\usepackage{verbatim}
 \usepackage{multicol}
 \setlength{\columnsep}{1cm}
 
@@ -42,7 +42,7 @@
 \pagestyle{fancy}
 \lhead{CS 57800: Statistical Machine Learning} % Top left header
 \chead{}
-\rhead{Homework 2} % Top right header
+\rhead{Class Project} % Top right header
 \lfoot{} % Bottom left footer
 \cfoot{} % Bottom center footer
 \rfoot{Page\ \thepage\ of\ \protect\pageref{LastPage}} % Bottom right footer
@@ -50,6 +50,7 @@
 \renewcommand\footrulewidth{0.4pt} % Size of the footer rule
 
 \renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+
 
 \setlength{\parskip}{.2\baselineskip}
 %\setlength\parindent{0pt} % Removes all indentation from paragraphs
@@ -77,14 +78,94 @@
 
 \section{Polishing the Proposal}
 
+The experimental settings of the proposal have been polished and a preliminary scope has been set. We will work with the image description task as a ranking problem \cite{Hodosh:2013:FID:2566972.2566993}. In this set, a dataset  $D$ is composed of examples $d_{i} = (i_{i}, s_{i})$ which are pairs of images and their corresponding written descriptions, each represented in a feature space $\Re^{I}$ and $\Re^{S}$ respectively. The goal is, given a query description $s_q$, return the closest match in the space $\Re^{I}$ (or given a query image $i_q$ return a match in $\Re^{S}$ \cite{rasiwasia2010new}.
+
+The domain adaptation exploration continues to be formulated in the same fashion: explore the advantage of the Microsoft Clip-Art dataset \cite{6751319} \cite{Zitnick_2013_ICCV_Workshops} (source domain) as a way to improve image description in the Flickr30k dataset \cite{} (target domain). First, we will test the simple feature augmentation adaptation proposed by \cite{daumeiii:2007:ACLMain}. This approach consists in a simple mapping of the feature space:
+
+$$\varphi_{source}(x) = (x,x,0) \;\;\;\;\;\;\;\; \varphi_{target}(x) = (x,0,x)$$
+
+Where the feature representation of each example $\Re^{k}$ is augmented to a space $\Re^{3k}$, with the form described above. The first $k$ features correspond to features of general interest (both for the source and target domains), the second $k$ features correspond to features of interest for the source domain and the last $k$ features correspond to features of interest for the target domain. This way, the weight vector $w^{3k}$ can be adjusted to recognize features that are relevant either for both domains or specifically relevant to either one of them.
+
+This domain adaptation approach assumes a model that learns a function over the features. Many distance based approaches (i.e. based on Nearest Neighbours and other distance computations), while widely used for the image description task, do not fit the "Frustratingly Easy" adaptation framework proposed by \cite{daumeiii:2007:ACLMain}. For this reason, we propose to use the correlation matching approach proposed by \cite{rasiwasia2010new}, that uses Canonical Correlation Analysis to learn weight vectors $\alpha$ and $\beta$ such that the random variables $\alpha'X$ and $\beta'Y$ maximize the correlation $\ro = C(\alpha'X, \beta'Y)$. These approach is used to find a dimensionality reduction of $\Re^{I}$ and $\Re^{S}$ to subspaces $U_{I}$ and $U_{S}$ that leads to a common subspace $U$ for cross-modal retrieval. Scoring can then be done by computing the distance between an image and a sentence in this new common subspace. 
+
+We propose to learn these correlation vectors over an augmented feature space for both $\Re_{I} \rightarrow \Re_{3I}$ and $\Re_{S} \rightarrow \Re_{3I}$ using the "Frustratingly Easy" approach \cite{daumeiii:2007:ACLMain}.
+
 \section{What has been done}
+
+Initially, we implemented a simple distance based approach based on Nearest Neighbours very similar to the one proposed by \cite{Hodosh:2013:FID:2566972.2566993}. The idea was to score images (and sentences) by their similarity
+
+$$f_{NN}(i,s_q) = f_{I}(i^{NN},i) \;\;\;\;\;\;\; \left \langle i^{NN},s^{NN}  \right \rangle = \operatornamewithlimits{argmax}_{\left \langle i^{t}, s^{t}\right \rangle} f_{S}(s_{q}, s^{t})$$
+
+$$f_{NN}(i_q,s) = f_{S}(s^{NN},s) \;\;\;\;\;\;\; \left \langle i^{NN},s^{NN}  \right \rangle = \operatornamewithlimits{argmax}_{\left \langle i^{t}, s^{t}\right \rangle} f_{I}(i_{q}, i^{t})$$
+
+$f_S$ is defined as the Dice Similarity between the IDF bag-of-words representation of two sentences \cite{Hodosh:2013:FID:2566972.2566993} and we simplified the distance between images $f_I$ as the intersection of their bag of features histograms previously extracted on the training set using K-means.
+
+After having implemented this approach, we realized that most domain adaptation frameworks wouldn't fit neither this approach and other kernel-based distance models proposed by \cite{Hodosh:2013:FID:2566972.2566993}. The frustratingly easy approach assumes that a weight vector is optimized from feature vectors and in this case, features were directly aggregated to obtain a measure of similarity. Other domain adaptation approaches that do allow this sort of flexibility have been proposed for object identification in images \cite{Saenko:2010:AVC:1888089.1888106} \cite{Kulis:2011:YSY:2191740.2191798} but they are specifically built for classification tasks and rely on the existence of a discrete corresponding label set on both domains. Approaches that formulate the ranking task as a classification problem also rely on annotations that describe relevance between examples \cite{NIPS2007_3270}. 
+
+For this reason, we shifted our focus to correlation matching techniques that, even though they score pairs based on a distance metric, they previously learn a common subspace for the images and sentence domains by adjusting weights over feature vectors. 
+
+Once this decision was made, we adapted our implementation to extract feature vectors for both sentences and images to be used in the CCA. We extracted SIFT words from images and LDA topics and Tfidf bag of words representations for sentences. 
+
+We also set up a script to run tests on three different baselines following the testing done on \cite{daumeiii:2007:ACLMain}:
+
+\begin{itemize}
+\item Training on the source domain only.
+\item Training on the target domain only.
+\item Training on both the source and target domain, put together directly.
+\end{itemize}
+
+Results for these three baselines can be observed below:
+
+
+We calculated the R@1, R@2 and R@5 scores. The training sets were used for the dimensionality transformation using CCA and the scoring was done with the L1 and L2 distances and the cosine similarity. And the testing was done on Flickr data only. 
+
+\begin{comment}
+\begin{table}[htbp]
+\centering
+\begin{tabular}
+{l*{6}{c}r} Training Domain & Measure & R@1 & R@5 & R@10 \\ \hline 
+Source Only & L1 & 4 & 0 & 2\\
+ & L2 & 3 & 0 & 3\\ 
+ & Cosine & 2 & 1 & 3\\
+ \hline
+ Target Only & L1 & 4 & 0 & 2\\
+ & L2 & 3 & 0 & 3\\ 
+ & Cosine & 2 & 1 & 3\\
+ \hline
+ Source and Target& L1 & 4 & 0 & 2\\
+ & L2 & 3 & 0 & 3\\ 
+ & Cosine & 2 & 1 & 3\\
+ \hline
+\end{tabular}
+\caption{ ** Note ** These results were calculated late at night. They might contain errors}
+\label{table1}
+\end{table}
+\end{comment}
+
 
 \section{What comes next?}
 
+First, we intend to set up the domain adaptation for the CCA and compare it with the baseline results. We have set up a script to run tests on three different baselines following the testing done on \cite{daumeiii:2007:ACLMain}:
 
+\begin{itemize}
+\item Training on the source domain only.
+\item Training on the target domain only.
+\item Training on both the source and target domain, put together directly.
+\end{itemize}
+
+We calculate R@1, R@5 and R@10 scores. The training sets are used for the dimensionality transformation using CCA and the scoring is done with the L1 and L2 distances and the cosine similarity. Testing is always done done on Flickr data only. These tests need to be run and put together for comparison.
+
+We want to optimize the features used, expanding the number of visual features to color and texture information and also incorporate features that give us more semantic information of entities and relationships in both the images and sentences, following the intuition of the method proposed by \cite{6751319}. 
+
+Text pre-processing needs to be incorporated also to normalize the text representation and reduce the noise in the crowd-sourced descriptions. For tests that use the bag of word representation, reducing the number of words considered is also important.
+
+Additionally, model parameters such as: number of image words extracted, components for the CCA, number of topics for the model that uses LDA, etc. need to be tuned using a validation dataset.
+
+Moreover, we would like to test other adaptation frameworks that could be easily incorporated into the proposed approach. 
 
 \nocite{*}
 \bibliographystyle{plainnat}
 \bibliography{references}
 
 \end{document}
+
