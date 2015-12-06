@@ -90,7 +90,7 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath, strin
 
     string outfile = joinPath(trainedPath, outFile + "_sift.yml");
     double total = imagePaths.size();
-    cout << "training " << total << " images." << endl;
+    cout << "Training SIFT bow model with " << total << " images." << endl;
     for (int i = 0; i < total; i++) {
         input = imread(imagePaths[i], CV_LOAD_IMAGE_GRAYSCALE);
         resize(input, dst, size);
@@ -114,6 +114,7 @@ int trainSift(vector<String> imagePaths, int numWords, string trainedPath, strin
     FileStorage fs(outfile, FileStorage::WRITE);
     fs << "vocabulary" << dictionary;
     fs.release();
+    cout << "Done" << endl;
 
     return 1;
 }
@@ -127,6 +128,7 @@ int trainCielab(vector<String> imagePaths, int numWords, string trainedPath, str
     Mat typeImg;
     string outfile = joinPath(trainedPath, outFile + "_cielab.yml");
     double total = imagePaths.size();
+    cout << "Training CIELAB bow model with " << total << " images" << endl;
     for (int i = 0; i < total; i++) {
         // read RGB image
         imgRgb = imread(imagePaths[i]);
@@ -154,7 +156,7 @@ int trainCielab(vector<String> imagePaths, int numWords, string trainedPath, str
     FileStorage fs(outfile, FileStorage::WRITE);
     fs << "centers" << centers;
     fs.release();
-
+    cout << "Done" << endl;
     //printContents(centers);
 
     return 1;
@@ -276,9 +278,13 @@ int extractFeats(string trainedPath, vector<string> imagePaths,
                  vector<vector<float> > &SiftFeats, vector<vector<float> > &CielabFeats,
                  string outFile) {
     Mat SIFTfeatMat;
+    cout << "Extracting SIFT words..." << endl;
     extractSiftBOW(trainedPath, imagePaths, SIFTfeatMat, outFile);
+    cout << "Done." << endl;
     Mat2vector(SIFTfeatMat, SiftFeats);
+    cout << "Extracting CIELAB words..." << endl;
     extractCielabBOW(trainedPath, imagePaths, CielabFeats, outFile);
+    cout << "Done" << endl;
     return 1;
 }
 
