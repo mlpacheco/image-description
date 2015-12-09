@@ -28,6 +28,7 @@ def parse_input():
                       dest='num_microsoft_train', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
     parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
+    # parser.add_option('-e', '--entities', help='entity ranking', dest='random', action='store_true', default=False)
     parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
     (opts, args) = parser.parse_args()
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
@@ -41,7 +42,8 @@ def parse_input():
 
 def parse_datasets(opts):
     f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
-    m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
+    m_train_sen, m_train_img, m_train_ent, m_val_sen, m_val_img, m_val_ent, m_test_sen, m_test_img, m_test_ent= parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
+    exit()
 
     train_sen = merge_two_dicts(f_train_sen, m_train_sen)
     train_img = merge_two_dicts(f_train_img, m_train_img)

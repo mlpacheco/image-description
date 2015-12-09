@@ -2,6 +2,7 @@ import os
 from random import shuffle, randint
 import re
 import numpy as np
+import json
 
 ### GENERAL ###
 def get_last_sentence(f_name):
@@ -27,7 +28,19 @@ def get_splits(total, train_ratio, val_ratio):
     num_val = int(total*val_ratio)
     return num_train, num_val
 
+def centroid(a):
+    if a:
+        return[np.mean(np.array(a)[:,i]) for i in range(len(a[0]))]
+    else:
+        return np.array([0,0])
+
 ### MICROSOFT ###
+def get_mirosoft_entity(png_id, categories):
+    if png_id[0] == 's':
+        return categories[png_id.split('.')[0]]
+    else:
+        return categories[png_id.split('_')[0]]
+
 def get_split_ids_microsoft(domain, num_train, num_val, num_test):
     filename = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020.txt")
     last_sentence  = get_last_sentence(filename)
@@ -86,11 +99,51 @@ def parse_microsoft_images(domain, train_ids, val_ids, test_ids):
 
     return train_img, val_img, test_img
 
+def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
+    filename = os.path.join(domain, "Scenes_10020.txt")
+    train_img = {}; val_img = {}; test_img = {}
+    categories = {}
+    with open('./model/general_categories.json') as f_json:
+        categories = json.load(f_json)
+    with open(filename) as f:
+        f = f.readlines()
+	count = 1
+        for i in range(1001):
+            for j in range(10):
+                img_index, ent_total = map(int, f[count].split())
+                index = img_index*10 + j
+		count += 1
+                selected_set = None
+                if index in train_ids:
+                    selected_set = train_img
+                elif index in val_ids:
+                    selected_set = val_img
+                elif index in test_ids:
+                    selected_set = test_img
+                else:
+                    count += ent_total
+                    continue
+                c_points = [None]*5
+		for k in range(ent_total):
+                    ent_data = f[count].split()
+                    c =  get_mirosoft_entity(ent_data[0], categories)
+                    x = int(ent_data[3])
+                    y = int(ent_data[4])
+                    if c_points[c]:
+                        c_points[c].append([x,y])
+                    else:
+                        c_points[c] = [[x,y]]
+                    count += 1
+                selected_set[index] = np.array([centroid(e) for e in c_points])
+    return train_img, val_img, test_img
+
+
 def parse_microsoft_dataset(domain, num_train, num_val, num_test):
     train_ids, val_ids, test_ids = get_split_ids_microsoft(domain, num_train, num_val, num_test)
     train_sen, val_sen, test_sen = parse_microsoft_sentences(domain, train_ids, val_ids, test_ids)
     train_img, val_img, test_img = parse_microsoft_images(domain, train_ids, val_ids, test_ids)
-    return train_sen, train_img, val_sen, val_img, test_sen, test_img
+    train_ent, val_ent, test_ent = parse_microsoft_entities(domain, train_ids, val_ids, test_ids)
+    return train_sen, train_img, train_ent, val_sen, val_img, val_ent, test_sen, test_img, test_ent
 
 ### FLICKR ###
 def get_split_ids_flickr30k(domain, num_train, num_val):
@@ -168,6 +221,9 @@ def parse_flickr30k_images(domain, train_ids, val_ids, test_ids):
                     continue
     return train_img, val_img, test_img
 
+def parse_flickr30k_entities(domain, train_ids, val_ids, test_ids):
+    pass
+
 def parse_flickr30k_dataset(domain, train_num, val_num):
     train_ids, val_ids = get_split_ids_flickr30k(domain, train_num, val_num)
     train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids)
@@ -201,4 +257,3 @@ def re_index(dictionary_sen, dictionary_img):
         value_img[index] = dictionary_img[key]
         index += 1
     return value_sen, value_img
-
