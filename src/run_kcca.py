@@ -41,7 +41,7 @@ def parse_input():
     return opts
 
 def parse_datasets(opts):
-    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
+    f_train_sen, f_train_img, f_train_ent, f_val_sen, f_val_img, f_val_ent, f_test_sen, f_test_img, f_test_ent = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
     m_train_sen, m_train_img, m_train_ent, m_val_sen, m_val_img, m_val_ent, m_test_sen, m_test_img, m_test_ent= parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
     exit()
 

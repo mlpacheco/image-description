@@ -3,6 +3,7 @@ from random import shuffle, randint
 import re
 import numpy as np
 import json
+import xml.etree.ElementTree as ET
 
 ### GENERAL ###
 def get_last_sentence(f_name):
@@ -101,7 +102,7 @@ def parse_microsoft_images(domain, train_ids, val_ids, test_ids):
 
 def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
     filename = os.path.join(domain, "Scenes_10020.txt")
-    train_img = {}; val_img = {}; test_img = {}
+    train_ent = {}; val_ent = {}; test_ent = {}
     categories = {}
     with open('./model/general_categories.json') as f_json:
         categories = json.load(f_json)
@@ -115,11 +116,11 @@ def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
 		count += 1
                 selected_set = None
                 if index in train_ids:
-                    selected_set = train_img
+                    selected_set = train_ent
                 elif index in val_ids:
-                    selected_set = val_img
+                    selected_set = val_ent
                 elif index in test_ids:
-                    selected_set = test_img
+                    selected_set = test_ent
                 else:
                     count += ent_total
                     continue
@@ -135,7 +136,7 @@ def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
                         c_points[c] = [[x,y]]
                     count += 1
                 selected_set[index] = np.array([centroid(e) for e in c_points])
-    return train_img, val_img, test_img
+    return train_ent, val_ent, test_ent
 
 
 def parse_microsoft_dataset(domain, num_train, num_val, num_test):
@@ -146,6 +147,34 @@ def parse_microsoft_dataset(domain, num_train, num_val, num_test):
     return train_sen, train_img, train_ent, val_sen, val_img, val_ent, test_sen, test_img, test_ent
 
 ### FLICKR ###
+def get_flickr_category(string):
+    if string == 'people':
+        return 0
+    if string == 'clothing':
+        return 1
+    if string == 'animals':
+        return 2
+    if string == 'vehicles':
+        return 3
+    if string == 'other':
+        return 4
+    else:
+        return -1
+
+def get_flickr_position(string, xml):
+    print string
+    for o in xml.findall('object'):
+        print
+        if string in [e.text for e in o.findall('name')]:
+            if o.find('bndbox')!=None:
+                xmax = int(o.find('bndbox').find('xmax').text)
+                xmin = int(o.find('bndbox').find('xmin').text)
+                ymax = int(o.find('bndbox').find('ymax').text)
+                ymin = int(o.find('bndbox').find('ymin').text)
+                return (xmax + xmin)/2.0, (ymax + ymin)/2.0
+            else:
+                return None, None
+
 def get_split_ids_flickr30k(domain, num_train, num_val):
     sentences_path = os.path.join(domain, 'flickr30k', 'train_sentences.token')
     total_image_num = image_num(sentences_path)
@@ -222,13 +251,57 @@ def parse_flickr30k_images(domain, train_ids, val_ids, test_ids):
     return train_img, val_img, test_img
 
 def parse_flickr30k_entities(domain, train_ids, val_ids, test_ids):
-    pass
+    path_sentence = os.path.join(domain, "Flickr30kEntities/Sentences")
+    path_data = os.path.join(domain, "Flickr30kEntities/Annotations")
+    train_ent = {}; val_ent = {}; test_ent = {}
+    for f in os.listdir(path_sentence):
+        # Ignore hidden files
+        if not f.startswith('.'):
+            filepath = os.path.join(path_sentence, f)
+            if os.path.isfile(filepath):
+                index = int(f.split('.', 1)[0])
+                if index in train_ids:
+                    selected_set = train_ent
+                elif index in val_ids:
+                    selected_set = val_ent
+                elif index in test_ids:
+                    selected_set = test_ent
+                else:
+                    continue
+                ent_sentences = []
+                # Parse sentences with entities
+                with open(filepath) as ent_file:
+                    for s in ent_file.readlines():
+                        ent_sentences += re.findall('/EN#(\d+)/([A-Za-z]+)',s)
+                # Parse xml with entities positions
+                xml_filepath = os.path.join(path_data, f.replace('txt','xml'))
+                xml = ET.parse(xml_filepath)
+                print xml_filepath
+                c_points = [None]*5
+                for elem in ent_sentences:
+                    c =  get_flickr_category(elem[1])
+                    if c < 0:
+                        continue
+                    x, y = get_flickr_position(elem[0],xml)
+                    if x==None and y==None:
+                        continue
+                    if c_points[c]:
+                        c_points[c].append([x,y])
+                    else:
+                        c_points[c] = [[x,y]]
+                selected_set[index] = np.array([centroid(e) for e in c_points])
+
+    print train_ent
+    print val_ent
+    print test_ent
+    return train_ent, val_ent, test_ent
 
 def parse_flickr30k_dataset(domain, train_num, val_num):
     train_ids, val_ids = get_split_ids_flickr30k(domain, train_num, val_num)
     train_sen, val_sen, test_sen = parse_flickr30k_sentences(domain, train_ids, val_ids)
     train_img, val_img, test_img = parse_flickr30k_images(domain, set(train_sen.keys()), set(val_sen.keys()), set(test_sen.keys()))
-    return train_sen, train_img, val_sen, val_img, test_sen, test_img
+    train_ent, val_ent, test_ent = parse_flickr30k_entities(domain, set(train_sen.keys()), set(val_sen.keys()), set(test_sen.keys()))
+    return train_sen, train_img, train_ent, val_sen, val_img, val_ent, test_sen, test_img, test_ent
 
 def merge_two_dicts(x, y):
     '''Given two dicts, merge them into a new dict as a shallow copy.'''
