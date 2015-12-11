@@ -29,7 +29,7 @@ def get_splits(total, train_ratio, val_ratio):
 
 ### MICROSOFT ###
 def get_split_ids_microsoft(domain, num_train, num_val, num_test):
-    filename = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020.txt")
+    filename = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020_preproc.txt")
     last_sentence  = get_last_sentence(filename)
     total_image_num = int(last_sentence.split()[0]) + 1
     ids = [i for i in xrange(0, total_image_num)]
@@ -39,8 +39,8 @@ def get_split_ids_microsoft(domain, num_train, num_val, num_test):
            set(ids[num_train+num_val:num_train+num_val+num_test])
 
 def parse_microsoft_sentences(domain, train_ids, val_ids, test_ids):
-    filename1 = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020.txt")
-    filename2 = os.path.join(domain, "SimpleSentences", "newSimpleSentences2_10020.txt")
+    filename1 = os.path.join(domain, "SimpleSentences", "newSimpleSentences1_10020_preproc.txt")
+    filename2 = os.path.join(domain, "SimpleSentences", "newSimpleSentences2_10020_preproc.txt")
     train_data = {}; val_data = {}; test_data = {}
     for filename in [filename1, filename2]:
         with open(filename) as f:
@@ -94,7 +94,7 @@ def parse_microsoft_dataset(domain, num_train, num_val, num_test):
 
 ### FLICKR ###
 def get_split_ids_flickr30k(domain, num_train, num_val):
-    sentences_path = os.path.join(domain, 'flickr30k', 'train_sentences.token')
+    sentences_path = os.path.join(domain, 'flickr30k', 'train_sentences_preproc.token')
     total_image_num = image_num(sentences_path)
     ids = [i for i in xrange(0, total_image_num)]
     shuffle(ids)
@@ -102,8 +102,8 @@ def get_split_ids_flickr30k(domain, num_train, num_val):
            set(ids[num_train:num_train+num_val])
 
 def parse_flickr30k_sentences(domain, train_index, val_index):
-    filename = os.path.join(domain, "flickr30k", "train_sentences.token")
-    test_filename = os.path.join(domain, "flickr30k", "test_sentences.token")
+    filename = os.path.join(domain, "flickr30k", "train_sentences_preproc.token")
+    test_filename = os.path.join(domain, "flickr30k", "test_sentences_preproc.token")
     train_data = {}; val_data = {}; test_data = {}; index = 0;
     prev_image_index = None
 
