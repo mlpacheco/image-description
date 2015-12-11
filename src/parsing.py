@@ -33,7 +33,7 @@ def centroid(a):
     if a:
         return[np.mean(np.array(a)[:,i]) for i in range(len(a[0]))]
     else:
-        return np.array([0,0])
+        return np.array([2000,2000])
 
 ### MICROSOFT ###
 def get_mirosoft_entity(png_id, categories):
@@ -70,7 +70,6 @@ def parse_microsoft_sentences(domain, train_ids, val_ids, test_ids):
                     sentences = test_data
                 else:
                     continue
-
                 if index in sentences:
                     sentences[index][0] += " " + s[2]
                 else:
@@ -104,15 +103,17 @@ def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
     filename = os.path.join(domain, "Scenes_10020.txt")
     train_ent = {}; val_ent = {}; test_ent = {}
     categories = {}
+    img_indexes = []
     with open('./model/general_categories.json') as f_json:
         categories = json.load(f_json)
     with open(filename) as f:
         f = f.readlines()
 	count = 1
-        for i in range(1001):
+        for i in range(1002):
             for j in range(10):
                 img_index, ent_total = map(int, f[count].split())
                 index = img_index*10 + j
+                img_indexes.append(index)
 		count += 1
                 selected_set = None
                 if index in train_ids:
@@ -135,15 +136,16 @@ def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
                     else:
                         c_points[c] = [[x,y]]
                     count += 1
-                selected_set[index] = np.array([centroid(e) for e in c_points])
+                selected_set[index] = np.array([centroid(e) for e in c_points]).flatten()
+
     return train_ent, val_ent, test_ent
 
 
 def parse_microsoft_dataset(domain, num_train, num_val, num_test):
     train_ids, val_ids, test_ids = get_split_ids_microsoft(domain, num_train, num_val, num_test)
     train_sen, val_sen, test_sen = parse_microsoft_sentences(domain, train_ids, val_ids, test_ids)
-    train_img, val_img, test_img = parse_microsoft_images(domain, train_ids, val_ids, test_ids)
-    train_ent, val_ent, test_ent = parse_microsoft_entities(domain, train_ids, val_ids, test_ids)
+    train_img, val_img, test_img = parse_microsoft_images(domain, train_sen.keys(), val_sen.keys(), test_sen.keys())
+    train_ent, val_ent, test_ent = parse_microsoft_entities(domain, train_sen.keys(), val_sen.keys(), test_sen.keys())
     return train_sen, train_img, train_ent, val_sen, val_img, val_ent, test_sen, test_img, test_ent
 
 ### FLICKR ###
@@ -160,18 +162,23 @@ def get_flickr_category(string):
         return 4
     else:
         return -1
+def get_coordinates(o):
+    xmax = int(o.find('bndbox').find('xmax').text)
+    xmin = int(o.find('bndbox').find('xmin').text)
+    ymax = int(o.find('bndbox').find('ymax').text)
+    ymin = int(o.find('bndbox').find('ymin').text)
+    return (xmax + xmin)/2.0, (ymax + ymin)/2.0
+
 
 def get_flickr_position(string, xml):
-    print string
     for o in xml.findall('object'):
-        print
+        if string == o.find('name').text:
+            if o.find('bndbox')!=None:
+                return get_coordinates(o)
+    for o in xml.findall('object'):
         if string in [e.text for e in o.findall('name')]:
             if o.find('bndbox')!=None:
-                xmax = int(o.find('bndbox').find('xmax').text)
-                xmin = int(o.find('bndbox').find('xmin').text)
-                ymax = int(o.find('bndbox').find('ymax').text)
-                ymin = int(o.find('bndbox').find('ymin').text)
-                return (xmax + xmin)/2.0, (ymax + ymin)/2.0
+                return get_coordinates(o)
             else:
                 return None, None
 
@@ -276,7 +283,6 @@ def parse_flickr30k_entities(domain, train_ids, val_ids, test_ids):
                 # Parse xml with entities positions
                 xml_filepath = os.path.join(path_data, f.replace('txt','xml'))
                 xml = ET.parse(xml_filepath)
-                print xml_filepath
                 c_points = [None]*5
                 for elem in ent_sentences:
                     c =  get_flickr_category(elem[1])
@@ -286,14 +292,11 @@ def parse_flickr30k_entities(domain, train_ids, val_ids, test_ids):
                     if x==None and y==None:
                         continue
                     if c_points[c]:
-                        c_points[c].append([x,y])
+                        c_points[c].append((x,y))
                     else:
-                        c_points[c] = [[x,y]]
-                selected_set[index] = np.array([centroid(e) for e in c_points])
+                        c_points[c] = [(x,y)]
+                selected_set[index] = np.array([centroid(e) for e in c_points]).flatten()
 
-    print train_ent
-    print val_ent
-    print test_ent
     return train_ent, val_ent, test_ent
 
 def parse_flickr30k_dataset(domain, train_num, val_num):
@@ -321,12 +324,14 @@ def find_files(dictionary):
     print "Could not find", count_w, "files"
     print "Found", count_r, "files"
 
-def re_index(dictionary_sen, dictionary_img):
+def re_index(dictionary_sen, dictionary_img, dictionary_ent):
     value_sen = [0.0]*len(dictionary_sen)
     value_img = [0.0]*len(dictionary_sen)
+    value_ent = [0.0]*len(dictionary_sen)
     index = 0
     for key in dictionary_sen:
         value_sen[index] = dictionary_sen[key]
         value_img[index] = dictionary_img[key]
+        value_ent[index] = dictionary_ent[key]
         index += 1
-    return value_sen, value_img
+    return value_sen, value_img, value_ent
