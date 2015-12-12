@@ -1,10 +1,21 @@
 import re
 
-import numpy
+import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity, polynomial_kernel
 
 import images
 
+def centroid(a):
+    if a:
+        return [np.mean(np.array(a)[:,i]) for i in range(len(a[0]))]
+    else:
+        return np.array([2000,2000])
+
+def dispersion(a):
+    if a:
+        return [np.var(np.array(a)[:,i]) for i in range(len(a[0]))]
+    else:
+        return [-1.0, -1.0]
 
 class DomainAdaptation(object):
 
@@ -42,7 +53,7 @@ class BowKernel(DomainAdaptation):
                 else:
                     ret.append(sim)
             m.append(ret)
-        m = numpy.asarray(m)
+        m = np.asarray(m)
         print m.shape
         return m
 
@@ -82,7 +93,7 @@ class HistKernel(DomainAdaptation):
                 else:
                     ret.append(sim)
             m.append(ret)
-        m = numpy.asarray(m)
+        m = np.asarray(m)
         print m.shape
         return m
 
@@ -97,8 +108,62 @@ def PyramidKernel(DomainAdaptation):
 
 class EntitiesKernel(DomainAdaptation):
 
-    def __init__(self, domain_adapt=False):
+    def __init__(self, domain_adapt=False, xstats=1, similarity=1):
         super(EntitiesKernel, self).__init__(domain_adapt)
+        self.xstats = xstats
+        self.similarity = similarity
 
     def __call__(self, X1, X2):
-        return polynomial_kernel(X1, X2, degree=2)
+        rows = []
+        for key_1, value_1 in X1.iteritems():
+            if self.xstats == 1:
+                x1 = np.array([centroid(e) for e in value_1]).flatten()
+            elif self.xtats == 2:
+                x1 = np.array([dispersion(e) for e in value_1]).flatten()
+            else:
+                x1_cen = np.array([centroid(e) for e in value_1]).flatten()
+                x1_dis = np.array([dispersion(e) for e in value_1]).flatten()
+            columns = []
+            for key_2, value_2 in X2.iteritems():
+                if self.xstats == 1:
+                    x2 = np.array([centroid(e) for e in value_2]).flatten()
+                elif self.xtats == 2:
+                    x2 = np.array([dispersion(e) for e in value_2]).flatten()
+                else:
+                    x2_cen = np.array([centroid(e) for e in value_2]).flatten()
+                    x2_dis = np.array([dispersion(e) for e in value_2]).flatten()
+
+                if self.similarity == 1:
+                    if self.xstats == 3:
+                        value_cen = polynomial_kernel(x1_cen,x2_cen).flatten()[0]
+                        value_dis = polynomial_kernel(x1_dis,x2_dis).flatten()[0]
+                        value = (value_cen + value_dis)/2
+                    else:
+                        value = polynomial_kernel(x1,x2).flatten()[0]
+                    if self.domain_adapt:
+                        if (key_1 < 10500 and key_2 < 10500) or ((key_1 > 10500 and key_2 > 10500)):
+                            columns.append(value)
+                        else:
+                            columns.append(2*value)
+                    else:
+                        columns.append(value)
+                else:
+                    if self.xstats == 3:
+                        value_cen = cosine_similarity(x1_cen,x2_cen).flatten()[0]
+                        value_dis = cosine_similarity(x1_dis,x2_dis).flatten()[0]
+                        value = (value_cen + value_dis)/2
+                    else:
+                        value = cosine_similarity(x1,x2).flatten()[0]
+                    if self.domain_adapt:
+                        if (key_1 < 10500 and key_2 < 10500) or ((key_1 > 10500 and key_2 > 10500)):
+                            columns.append(value)
+                        else:
+                            columns.append(2*value)
+                    else:
+                        columns.append(value)
+            rows.append(columns)
+        m = np.asarray(rows)
+        print m.shape
+        return m
+
+
