@@ -80,7 +80,7 @@ def train_bow(sentences, path, out_file, ngram):
         text += s[0]
     extension = + str(ngram) + "_bow.pkl"
     tfidf_filename = join(path, out_file + extension)
-    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01, ngram_range=(1,ngram))
+    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01, ngram_range=(ngram,ngram))
     vectorizer.fit(text)
     joblib.dump(vectorizer, tfidf_filename)
 
