@@ -26,11 +26,15 @@ def parse_input():
                       dest='out_image', type='string')
     parser.add_option('-m', '--microsoft', help='number of training examples of source domain',\
                       dest='num_microsoft_train', type='int')
+    parser.add_option('-x', '--xstats', help='type of stat to use for entities.\n 1: for centroids, 2: for dispersion, 3: for both',\
+                      dest='xstats', type='int')
+    parser.add_option('-k', '--kernel_sim', help='type of kerne; to use for entities.\n 1: polynomial, 2: cosine similarity',\
+                      dest='kernel_sim', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
     parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
     parser.add_option('-e', '--entities', help='entity ranking', dest='entities', action='store_true', default=False)
     parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
-    parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1)
+    parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1, type=int)
     (opts, args) = parser.parse_args()
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
     for m in mandatories:
@@ -52,9 +56,8 @@ def parse_datasets(opts):
     test_ent = f_test_ent
     value_sen_train, value_img_train, value_ent_train = re_index(train_sen, train_img, train_ent)
     value_sen_test, value_img_test, value_ent_test = re_index(test_sen, test_img, test_ent)
-
     if opts.entities:
-        return value_sen_train, value_ent_train, value_sen_test, value_ent_test
+        return value_sen_train, train_ent, value_sen_test, test_ent
     else:
         return value_sen_train, value_img_train, value_sen_test, value_img_test
 
@@ -131,7 +134,10 @@ def main():
             print "Done."
 
             kernel_sen = BowKernel(opts.adaptation)
-            kernel_img = EntitiesKernel(opts.adaptation)
+            kernel_img = EntitiesKernel(opts.adaptation, opts.xstats, opts.kernel_sim)
+
+            #centroids or dispersion
+            #np.array([centroid(e) for e in c_points]).flatten()
 
         print "FITTING KCCA ##################"
         value_sen_train = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)

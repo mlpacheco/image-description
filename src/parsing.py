@@ -29,11 +29,6 @@ def get_splits(total, train_ratio, val_ratio):
     num_val = int(total*val_ratio)
     return num_train, num_val
 
-def centroid(a):
-    if a:
-        return[np.mean(np.array(a)[:,i]) for i in range(len(a[0]))]
-    else:
-        return np.array([2000,2000])
 
 ### MICROSOFT ###
 def get_mirosoft_entity(png_id, categories):
@@ -136,7 +131,7 @@ def parse_microsoft_entities(domain, train_ids, val_ids, test_ids):
                     else:
                         c_points[c] = [[x,y]]
                     count += 1
-                selected_set[index] = np.array([centroid(e) for e in c_points]).flatten()
+                selected_set[index] = c_points
 
     return train_ent, val_ent, test_ent
 
@@ -295,7 +290,7 @@ def parse_flickr30k_entities(domain, train_ids, val_ids, test_ids):
                         c_points[c].append((x,y))
                     else:
                         c_points[c] = [(x,y)]
-                selected_set[index] = np.array([centroid(e) for e in c_points]).flatten()
+                selected_set[index] = c_points
 
     return train_ent, val_ent, test_ent
 
