@@ -73,37 +73,24 @@ def extract_lda(sentences, k, path, out_file):
     return np.asarray(ret)
 
 
-def train_bow(sentences, path, out_file):
+def train_bow(sentences, path, out_file, ngram):
     ## use of TF-IDF normalization for BOW
-    text = [s[0] for s in sentences]
-    tfidf_filename = join(path, out_file + "_bow.pkl")
-    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01)
+    text = []
+    for s in sentences:
+        text += s[0]
+    extension = + str(ngram) + "_bow.pkl"
+    tfidf_filename = join(path, out_file + extension)
+    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01, ngram_range=(1,ngram))
     vectorizer.fit(text)
     joblib.dump(vectorizer, tfidf_filename)
 
-def extract_bow(sentences, path, out_file):
-    text = [s[0] for s in sentences]
+def extract_bow(sentences, path, out_file, ngram):
+    text = []
+    for s in sentences:
+        text.append(" ".join(s[0]).strip())
     labels = [s[1] for s in sentences]
-    tfidf_filename = join(path, out_file + "_bow.pkl")
-    vectorizer = joblib.load(tfidf_filename)
-    text = vectorizer.transform(text)
-    output = []
-    for row, l in zip(text, labels):
-        output.append((row.toarray(), l))
-    return output
-
-def train_trigrams(sentences, path, out_file):
-    text = [s[0] for s in sentences]
-    labels = [s[1] for s in sentences]
-    tfidf_filename = join(path, out_file + "_tri.pkl")
-    vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01, ngram_range=(1,3))
-    vectorizer.fit(text)
-    joblib.dump(vectorizer, tfidf_filename)
-
-def extract_trigrams(sentences, path, out_file):
-    text = [s[0] for s in sentences]
-    labels = [s[1] for s in sentences]
-    tfidf_filename = join(path, out_file + "_tri.pkl")
+    extension = + str(ngram) + "_bow.pkl"
+    tfidf_filename = join(path, out_file + extension)
     vectorizer = joblib.load(tfidf_filename)
     text = vectorizer.transform(text)
     output = []
