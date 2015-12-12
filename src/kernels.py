@@ -1,7 +1,7 @@
 import re
 
 import numpy
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_similarity, polynomial_kernel
 
 import images
 
@@ -93,3 +93,12 @@ def PyramidKernel(DomainAdaptation):
 
     def __call__(self, X1, X2):
         pass
+
+
+class EntitiesKernel(DomainAdaptation):
+
+    def __init__(self, domain_adapt=False):
+        super(EntitiesKernel, self).__init__(domain_adapt)
+
+    def __call__(self, X1, X2):
+        return polynomial_kernel(X1, X2, degree=2)

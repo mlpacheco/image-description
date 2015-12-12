@@ -10,7 +10,7 @@ from PyKCCA import KCCA
 from parsing import *
 import sentences
 import images
-from kernels import BowKernel, HistKernel
+from kernels import BowKernel, HistKernel, EntitiesKernel
 
 def parse_input():
     parser = optparse.OptionParser()
@@ -28,6 +28,7 @@ def parse_input():
                       dest='num_microsoft_train', type='int')
     parser.add_option('-o', '--out', help='output file', dest='out_file', type='string')
     parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
+    parser.add_option('-e', '--entities', help='entity ranking', dest='entities', action='store_true', default=False)
     parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
     parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1)
     (opts, args) = parser.parse_args()
@@ -41,18 +42,21 @@ def parse_input():
     return opts
 
 def parse_datasets(opts):
-    f_train_sen, f_train_img, f_val_sen, f_val_img, f_test_sen, f_test_img = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
-    m_train_sen, m_train_img, m_val_sen, m_val_img, m_test_sen, m_test_img = parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
-
+    f_train_sen, f_train_img, f_train_ent, f_val_sen, f_val_img, f_val_ent, f_test_sen, f_test_img, f_test_ent = parse_flickr30k_dataset(opts.target, opts.num_flickr_train, 0)
+    m_train_sen, m_train_img, m_train_ent, m_val_sen, m_val_img, m_val_ent, m_test_sen, m_test_img, m_test_ent= parse_microsoft_dataset(opts.source, opts.num_microsoft_train, 0, 0)
     train_sen = merge_two_dicts(f_train_sen, m_train_sen)
     train_img = merge_two_dicts(f_train_img, m_train_img)
+    train_ent = merge_two_dicts(f_train_ent, m_train_ent)
     test_sen = f_test_sen
     test_img = f_test_img
+    test_ent = f_test_ent
+    value_sen_train, value_img_train, value_ent_train = re_index(train_sen, train_img, train_ent)
+    value_sen_test, value_img_test, value_ent_test = re_index(test_sen, test_img, test_ent)
 
-    value_sen_train, value_img_train = re_index(train_sen, train_img)
-    value_sen_test, value_img_test = re_index(test_sen, test_img)
-
-    return value_sen_train, value_img_train, value_sen_test, value_img_test
+    if opts.entities:
+        return value_sen_train, value_ent_train, value_sen_test, value_ent_test
+    else:
+        return value_sen_train, value_img_train, value_sen_test, value_img_test
 
 def write_to_file(scores, filename):
     with open(filename, 'w') as fw:
@@ -107,19 +111,27 @@ def main():
     print opts
 
     print "PARSING ################"
-    value_sen_train, value_img_train, value_sen_test, value_img_test = parse_datasets(opts)
+    value_sen_train, value_img_train, value_sen_test, value_img_test= parse_datasets(opts)
     print "Done."
 
     if not opts.random:
 
-        print "TRAINING FEATURES ##############"
-        sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
-        images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
-        images.trainCielab(images.PathSet(value_img_train), 128, opts.out_image, opts.out_file)
-        print "Done."
+        if not opts.entities:
+            print "TRAINING FEATURES ##############"
+            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
+            images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
+            images.trainCielab(images.PathSet(value_img_train), 128, opts.out_image, opts.out_file)
+            print "Done."
 
-        kernel_sen = BowKernel(opts.adaptation)
-        kernel_img = HistKernel(opts.out_image, opts.out_file, opts.adaptation)
+            kernel_sen = BowKernel(opts.adaptation)
+            kernel_img = HistKernel(opts.out_image, opts.out_file, opts.adaptation)
+        else:
+            print "TRAINING FEATURES ##############"
+            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
+            print "Done."
+
+            kernel_sen = BowKernel(opts.adaptation)
+            kernel_img = EntitiesKernel(opts.adaptation)
 
         print "FITTING KCCA ##################"
         value_sen_train = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
