@@ -78,7 +78,7 @@ def train_bow(sentences, path, out_file, ngram):
     text = []
     for s in sentences:
         text += s[0]
-    extension = + str(ngram) + "_bow.pkl"
+    extension = str(ngram) + "_bow.pkl"
     tfidf_filename = join(path, out_file + extension)
     vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, min_df=0.01, ngram_range=(1,ngram))
     vectorizer.fit(text)
@@ -89,7 +89,7 @@ def extract_bow(sentences, path, out_file, ngram):
     for s in sentences:
         text.append(" ".join(s[0]).strip())
     labels = [s[1] for s in sentences]
-    extension = + str(ngram) + "_bow.pkl"
+    extension = str(ngram) + "_bow.pkl"
     tfidf_filename = join(path, out_file + extension)
     vectorizer = joblib.load(tfidf_filename)
     text = vectorizer.transform(text)
