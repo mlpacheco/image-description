@@ -34,6 +34,7 @@ def parse_input():
     parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
     parser.add_option('-e', '--entities', help='entity ranking', dest='entities', action='store_true', default=False)
     parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
+    parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1, type=int)
     (opts, args) = parser.parse_args()
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
     for m in mandatories:
@@ -120,7 +121,7 @@ def main():
 
         if not opts.entities:
             print "TRAINING FEATURES ##############"
-            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
+            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
             images.trainSift(images.PathSet(value_img_train), 256, opts.out_image, opts.out_file)
             images.trainCielab(images.PathSet(value_img_train), 128, opts.out_image, opts.out_file)
             print "Done."
@@ -129,7 +130,7 @@ def main():
             kernel_img = HistKernel(opts.out_image, opts.out_file, opts.adaptation)
         else:
             print "TRAINING FEATURES ##############"
-            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file)
+            sentences.train_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
             print "Done."
 
             kernel_sen = BowKernel(opts.adaptation)
@@ -139,8 +140,8 @@ def main():
             #np.array([centroid(e) for e in c_points]).flatten()
 
         print "FITTING KCCA ##################"
-        value_sen_train = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file)
-        value_sen_test = sentences.extract_bow(value_sen_test, opts.out_sentence, opts.out_file)
+        value_sen_train = sentences.extract_bow(value_sen_train, opts.out_sentence, opts.out_file, opts.ngram)
+        value_sen_test = sentences.extract_bow(value_sen_test, opts.out_sentence, opts.out_file, opts.ngram)
 
         # image kernel needs to come first on all KCCA calls for bad images error handling
         cca = KCCA(kernel_img, kernel_sen,
