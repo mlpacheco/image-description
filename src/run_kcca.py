@@ -30,7 +30,7 @@ def parse_input():
     parser.add_option('-r', '--random', help='random ranking', dest='random', action='store_true', default=False)
     parser.add_option('-e', '--entities', help='entity ranking', dest='entities', action='store_true', default=False)
     parser.add_option('-a', '--adaptation', help='set up adaptation', dest='adaptation', action='store_true', default=False)
-    parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1)
+    parser.add_option('-g', '--ngram', help='1 for unigrams, 2 for bigrams, 3 for trigrams', dest='ngram', default=1, type=int)
     (opts, args) = parser.parse_args()
     '''mandatories = ['source', 'target', 'out_image', 'out_sentence', 'num_microsoft_train', 'num_flickr_train', 'out_file']
     for m in mandatories:
