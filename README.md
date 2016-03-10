@@ -7,5 +7,5 @@ The goal is to test the kernelized derivation of the Frustratingly Easy domain a
 The adaptation was set taking clip-art images from the Microsoft Abstract Scene dataset as the source domain and Flickr30k, a repository of real images, as the target domain. 
 
 Authors:
-   Maria Leonor Pacheco ([eme-ele](https://github.com/eme-ele))
+   Maria Leonor Pacheco ([eme-ele](https://github.com/eme-ele)) and 
    Glebys Gonzalez ([glebysg](https://github.com/glebysg))
